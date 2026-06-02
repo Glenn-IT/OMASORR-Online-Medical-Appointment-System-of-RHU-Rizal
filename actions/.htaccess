@@ -1,4 +1,3 @@
-# Block direct browser access to all action scripts.
-# They must be called via form POST from PHP views, not opened directly.
-Order Deny,Allow
-Deny from all
+# Direct GET navigation is blocked per-script via PHP redirects.
+# POST form submissions and AJAX calls must be allowed here.
+# Do not add Deny from all — it blocks POST requests before PHP can run.
