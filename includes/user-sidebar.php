@@ -12,7 +12,7 @@
  */
 
 $base        = '/rhu-appointment-system';
-$userName    = $_SESSION['user']['full_name'] ?? 'Patient User';
+$userName    = $_SESSION['patient']['full_name'] ?? 'Patient User';
 $userInitial = strtoupper($userName[0] ?? 'P');
 $currentPage = basename($_SERVER['PHP_SELF']);
 ?>
