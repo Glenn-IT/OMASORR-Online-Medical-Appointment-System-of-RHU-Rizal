@@ -3,40 +3,6 @@
 // ============================================================
 
 // ============================================================
-// AUTH
-// ============================================================
-function checkAuth(role) {
-  const session = DB.getSession();
-  if (!session) {
-    window.location.href =
-      role === "admin"
-        ? "/rhu-appointment-system/views/admin/login.html"
-        : "/rhu-appointment-system/index.html";
-    return null;
-  }
-  if (role === "admin" && session.role !== "admin") {
-    window.location.href = "/rhu-appointment-system/index.html";
-    return null;
-  }
-  if (role === "user" && session.role === "admin") {
-    window.location.href = "/rhu-appointment-system/views/admin/dashboard.html";
-    return null;
-  }
-  return session;
-}
-
-function logout() {
-  DB.clearSession();
-  showToast("Logged out successfully.", "info");
-  setTimeout(() => {
-    const href = window.location.pathname.includes("/admin/")
-      ? "/rhu-appointment-system/views/admin/login.html"
-      : "/rhu-appointment-system/index.html";
-    window.location.href = href;
-  }, 800);
-}
-
-// ============================================================
 // TOAST
 // ============================================================
 function showToast(message, type = "success", title = null) {
@@ -177,10 +143,11 @@ class RHUCalendar {
   constructor(containerId, options = {}) {
     this.container = document.getElementById(containerId);
     this.options = options;
-    this.date = new Date(2026, 3, 1); // April 2026
+    const now = new Date();
+    this.date = new Date(now.getFullYear(), now.getMonth(), 1);
     this.selectedDate = null;
-    this.bookedDates = DB.getBookedDates();
-    this.closedDates = RHU_DATA.closedDates;
+    this.bookedDates = [];
+    this.closedDates = [];
     this.today = new Date();
     this.today.setHours(0, 0, 0, 0);
     this.render();
@@ -281,30 +248,6 @@ class RHUCalendar {
 }
 
 // ============================================================
-// POPULATE DROPDOWNS
-// ============================================================
-function populateServices(selectId) {
-  const el = document.getElementById(selectId);
-  if (!el) return;
-  el.innerHTML = '<option value="">-- Select Service --</option>';
-  RHU_DATA.services.forEach((s) => {
-    el.innerHTML += `<option value="${s.name}">${s.name}</option>`;
-  });
-}
-
-function populateDoctors(selectId) {
-  const el = document.getElementById(selectId);
-  if (!el) return;
-  const doctors = DB.getDoctors();
-  el.innerHTML = '<option value="">-- Select Doctor --</option>';
-  doctors.forEach((d) => {
-    if (d.available) {
-      el.innerHTML += `<option value="${d.name}">${d.name} (${d.specialty})</option>`;
-    }
-  });
-}
-
-// ============================================================
 // SET SIDEBAR ACTIVE
 // ============================================================
 function setSidebarActive() {
@@ -345,23 +288,4 @@ document.addEventListener("DOMContentLoaded", () => {
   initSidebar();
   initTabs();
   setSidebarActive();
-
-  // Update sidebar username if session exists
-  const session = DB.getSession();
-  if (session) {
-    const nameEl = document.querySelector(".sidebar-user .name");
-    const roleEl = document.querySelector(".sidebar-user .role");
-    const avatarEl = document.querySelector(".sidebar-user .user-avatar");
-    const topNameEl = document.querySelector(".topbar-user .user-name");
-    const topAvatarEl = document.querySelector(".topbar-user .avatar");
-    if (nameEl) nameEl.textContent = session.fullName || session.name || "User";
-    if (roleEl)
-      roleEl.textContent =
-        session.role === "admin" ? "System Administrator" : "Patient";
-    const initial = (session.fullName || session.name || "U")[0].toUpperCase();
-    if (avatarEl) avatarEl.textContent = initial;
-    if (topNameEl)
-      topNameEl.textContent = session.fullName || session.name || "User";
-    if (topAvatarEl) topAvatarEl.textContent = initial;
-  }
 });
