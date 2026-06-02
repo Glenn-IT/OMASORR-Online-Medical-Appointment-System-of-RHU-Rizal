@@ -11,8 +11,8 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 verifyCsrf();
 
 $session   = getPatientSession();
-$patientId = (int) $session['patient']['id'];
-$username  = $session['user']['username'];
+$patientId = (int) $session['id'];
+$username  = $session['username'];
 $apptId    = (int) ($_POST['appointment_id'] ?? 0);
 
 if (!$apptId) {
