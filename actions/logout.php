@@ -9,18 +9,7 @@ session_unset();
 session_destroy();
 
 // Expire the session cookie immediately
-if (ini_get('session.use_cookies')) {
-    $params = session_get_cookie_params();
-    setcookie(
-        session_name(SESSION_NAME),
-        '',
-        time() - 42000,
-        $params['path'],
-        $params['domain'],
-        $params['secure'],
-        $params['httponly']
-    );
-}
+setcookie(SESSION_NAME, '', time() - 42000, '/', '', false, true);
 
 // Prevent caching of this response
 header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
