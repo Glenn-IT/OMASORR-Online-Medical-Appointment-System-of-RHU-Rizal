@@ -53,6 +53,11 @@ function verifyCsrf(): void
 // ────────────────────────────────────────────────────────────
 function requireLogin(string $role = 'patient'): void
 {
+    // Prevent browser from caching authenticated pages
+    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+    header('Pragma: no-cache');
+    header('Expires: Sat, 01 Jan 2000 00:00:00 GMT');
+
     if ($role === 'admin') {
         if (empty($_SESSION['admin'])) {
             header('Location: ' . BASE_URL . '/views/admin/login.php');
