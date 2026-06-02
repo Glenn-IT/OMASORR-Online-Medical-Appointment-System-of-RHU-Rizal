@@ -5,14 +5,12 @@ require_once __DIR__ . '/../../config/auth.php';
 
 requireLogin('patient');
 $session   = getPatientSession();
-$patient   = $session['patient'];
-$user      = $session['user'];
-$fullName  = trim($patient['first_name'] . ' ' . $patient['last_name']);
+$fullName  = $session['full_name'];
 $initial   = strtoupper(mb_substr($fullName, 0, 1));
 
 // Fetch stats
 $pdo   = db();
-$pid   = (int) $patient['id'];
+$pid   = (int) $session['id'];
 
 $stats = $pdo->prepare("
     SELECT
