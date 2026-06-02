@@ -28,6 +28,7 @@ if (!$firstName || !$lastName)          $errors[] = 'First name and last name ar
 if (!$birthdate)                         $errors[] = 'Date of birth is required.';
 if (!in_array($gender, ['Male','Female','Other'])) $errors[] = 'Please select a valid gender.';
 if (!$phone)                             $errors[] = 'Phone number is required.';
+elseif (!preg_match('/^09\d{9}$/', $phone)) $errors[] = 'Phone number must be 11 digits starting with 09 (e.g. 09123456789).';
 if (!$address)                           $errors[] = 'Address is required.';
 if (!filter_var($email, FILTER_VALIDATE_EMAIL)) $errors[] = 'Please enter a valid email address.';
 if (strlen($username) < 4 || strpos($username, ' ') !== false) $errors[] = 'Username must be at least 4 characters and contain no spaces.';
