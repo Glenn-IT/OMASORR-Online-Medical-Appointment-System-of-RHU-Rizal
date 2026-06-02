@@ -77,8 +77,14 @@ require_once __DIR__ . '/../../includes/header.php';
         <div class="form-row">
           <div class="form-group">
             <label class="form-label">Date of Birth *</label>
-            <input type="date" class="form-control" id="birthdate" name="birthdate" value="<?= htmlspecialchars($_POST['birthdate'] ?? '') ?>" />
+            <input type="date" class="form-control" id="birthdate" name="birthdate" value="<?= htmlspecialchars($_POST['birthdate'] ?? '') ?>" max="<?= date('Y-m-d') ?>" />
           </div>
+          <div class="form-group">
+            <label class="form-label">Age</label>
+            <input type="text" class="form-control" id="age" name="age" placeholder="Auto-calculated" readonly style="background:var(--gray-100);cursor:not-allowed;" />
+          </div>
+        </div>
+        <div class="form-row">
           <div class="form-group">
             <label class="form-label">Gender *</label>
             <select class="form-select" id="gender" name="gender">
@@ -88,23 +94,24 @@ require_once __DIR__ . '/../../includes/header.php';
               <option value="Other"  <?= ($_POST['gender'] ?? '') === 'Other'  ? 'selected' : '' ?>>Other</option>
             </select>
           </div>
+          <div class="form-group">
+            <label class="form-label">Blood Type</label>
+            <select class="form-select" id="bloodType" name="blood_type">
+              <option value="">-- Select --</option>
+              <?php foreach (['A+','A-','B+','B-','O+','O-','AB+','AB-','Unknown'] as $bt): ?>
+              <option <?= ($_POST['blood_type'] ?? '') === $bt ? 'selected' : '' ?>><?= $bt ?></option>
+              <?php endforeach; ?>
+            </select>
+          </div>
         </div>
         <div class="form-row">
           <div class="form-group">
             <label class="form-label">Phone Number *</label>
             <div class="input-group">
               <i class="fa-solid fa-phone input-icon"></i>
-              <input type="tel" class="form-control" id="phone" name="phone" placeholder="09XXXXXXXXX" value="<?= htmlspecialchars($_POST['phone'] ?? '') ?>" />
+              <input type="tel" class="form-control" id="phone" name="phone" placeholder="09XXXXXXXXX" maxlength="11" value="<?= htmlspecialchars($_POST['phone'] ?? '') ?>" />
             </div>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Blood Type</label>
-            <select class="form-select" id="bloodType" name="blood_type">
-              <option value="">-- Select --</option>
-              <?php foreach (['A+','A-','B+','B-','O+','O-','AB+','AB-'] as $bt): ?>
-              <option <?= ($_POST['blood_type'] ?? '') === $bt ? 'selected' : '' ?>><?= $bt ?></option>
-              <?php endforeach; ?>
-            </select>
+            <p class="form-hint" id="phoneHint">Must be 11 digits starting with 09 (e.g. 09123456789)</p>
           </div>
         </div>
         <div class="form-group">
@@ -124,6 +131,7 @@ require_once __DIR__ . '/../../includes/header.php';
             <i class="fa-solid fa-envelope input-icon"></i>
             <input type="email" class="form-control" id="email" name="email" placeholder="you@email.com" value="<?= htmlspecialchars($_POST['email'] ?? '') ?>" />
           </div>
+          <p class="form-hint" id="emailHint" style="display:none;color:var(--danger)">Please enter a valid email address (e.g. user@example.com)</p>
         </div>
         <div class="form-group">
           <label class="form-label">Username *</label>
@@ -138,6 +146,7 @@ require_once __DIR__ . '/../../includes/header.php';
           <div class="input-group">
             <i class="fa-solid fa-lock input-icon"></i>
             <input type="password" class="form-control" id="regPassword" name="password" placeholder="At least 8 characters" />
+            <i class="fa-solid fa-eye input-icon-right" id="toggleRegPwd" style="pointer-events:all;cursor:pointer" title="Show/hide password"></i>
           </div>
         </div>
         <div class="form-group">
@@ -145,6 +154,7 @@ require_once __DIR__ . '/../../includes/header.php';
           <div class="input-group">
             <i class="fa-solid fa-shield-halved input-icon"></i>
             <input type="password" class="form-control" id="confirmPassword" name="confirm_password" placeholder="Repeat password" />
+            <i class="fa-solid fa-eye input-icon-right" id="toggleConfirmPwd" style="pointer-events:all;cursor:pointer" title="Show/hide password"></i>
           </div>
         </div>
         <div class="form-group">
@@ -190,10 +200,81 @@ require_once __DIR__ . '/../../includes/header.php';
 <?php
 $extraScripts = <<<'JS'
 <script>
+  // ── Age auto-calculation ──────────────────────────────────
+  function calculateAge(dob) {
+    if (!dob) return '';
+    const today = new Date();
+    const birth = new Date(dob);
+    let age = today.getFullYear() - birth.getFullYear();
+    const m = today.getMonth() - birth.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
+    return age >= 0 ? age : '';
+  }
+
+  document.getElementById('birthdate')?.addEventListener('change', function () {
+    document.getElementById('age').value = calculateAge(this.value);
+  });
+
+  // Pre-fill age if birthdate already has a value (e.g. after validation failure)
+  (function () {
+    const bd = document.getElementById('birthdate')?.value;
+    if (bd) document.getElementById('age').value = calculateAge(bd);
+  })();
+
+  // ── Phone validation helper ───────────────────────────────
+  function isValidPHPhone(val) {
+    return /^09\d{9}$/.test(val);
+  }
+
+  document.getElementById('phone')?.addEventListener('input', function () {
+    this.value = this.value.replace(/\D/g, '').slice(0, 11);
+    const hint = document.getElementById('phoneHint');
+    if (this.value && !isValidPHPhone(this.value)) {
+      hint.style.color = 'var(--danger)';
+    } else {
+      hint.style.color = '';
+    }
+  });
+
+  // ── Email validation helper ───────────────────────────────
+  function isValidEmail(val) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(val);
+  }
+
+  document.getElementById('email')?.addEventListener('blur', function () {
+    const hint = document.getElementById('emailHint');
+    if (this.value && !isValidEmail(this.value)) {
+      hint.style.display = '';
+    } else {
+      hint.style.display = 'none';
+    }
+  });
+
+  // ── Password show/hide toggles ────────────────────────────
+  function makeToggle(toggleId, inputId) {
+    document.getElementById(toggleId)?.addEventListener('click', function () {
+      const inp = document.getElementById(inputId);
+      if (inp.type === 'password') {
+        inp.type = 'text';
+        this.classList.replace('fa-eye', 'fa-eye-slash');
+      } else {
+        inp.type = 'password';
+        this.classList.replace('fa-eye-slash', 'fa-eye');
+      }
+    });
+  }
+  makeToggle('toggleRegPwd',     'regPassword');
+  makeToggle('toggleConfirmPwd', 'confirmPassword');
+
+  // ── Step navigation ───────────────────────────────────────
   function goToStep2() {
     const fields = ['firstName','lastName','birthdate','gender','phone','address'];
     if (fields.some(id => !document.getElementById(id).value.trim())) {
       showToast('Please fill in all required fields.', 'warning'); return;
+    }
+    const phone = document.getElementById('phone').value.trim();
+    if (!isValidPHPhone(phone)) {
+      showToast('Phone number must be 11 digits starting with 09 (e.g. 09123456789).', 'warning'); return;
     }
     document.getElementById('step1').style.display = 'none';
     document.getElementById('step2').style.display = 'block';
@@ -209,18 +290,34 @@ $extraScripts = <<<'JS'
     document.getElementById('step1Indicator').classList.add('active');
   }
 
+  // ── Form submit validation ────────────────────────────────
   document.getElementById('signupForm')?.addEventListener('submit', (e) => {
+    const email    = document.getElementById('email').value.trim();
     const username = document.getElementById('regUsername').value.trim();
     const password = document.getElementById('regPassword').value;
     const confirm  = document.getElementById('confirmPassword').value;
     const agree    = document.getElementById('agreeTerms').checked;
-    const email    = document.getElementById('email').value.trim();
 
-    if (!email || !username || !password || !confirm) { e.preventDefault(); showToast('Please fill in all required fields.', 'warning'); return; }
-    if (username.length < 4 || username.includes(' ')) { e.preventDefault(); showToast('Username must be at least 4 characters and no spaces.', 'warning'); return; }
-    if (password.length < 8) { e.preventDefault(); showToast('Password must be at least 8 characters.', 'warning'); return; }
-    if (password !== confirm) { e.preventDefault(); showToast('Passwords do not match.', 'error'); return; }
-    if (!agree) { e.preventDefault(); showToast('You must agree to the Terms & Conditions.', 'warning'); return; }
+    if (!email || !username || !password || !confirm) {
+      e.preventDefault(); showToast('Please fill in all required fields.', 'warning'); return;
+    }
+    if (!isValidEmail(email)) {
+      e.preventDefault();
+      document.getElementById('emailHint').style.display = '';
+      showToast('Please enter a valid email address.', 'warning'); return;
+    }
+    if (username.length < 4 || username.includes(' ')) {
+      e.preventDefault(); showToast('Username must be at least 4 characters and no spaces.', 'warning'); return;
+    }
+    if (password.length < 8) {
+      e.preventDefault(); showToast('Password must be at least 8 characters.', 'warning'); return;
+    }
+    if (password !== confirm) {
+      e.preventDefault(); showToast('Passwords do not match.', 'error'); return;
+    }
+    if (!agree) {
+      e.preventDefault(); showToast('You must agree to the Terms & Conditions.', 'warning'); return;
+    }
 
     const btn = document.getElementById('submitBtn');
     btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Creating Account...';
