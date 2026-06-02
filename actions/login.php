@@ -19,8 +19,8 @@ if ($username === '' || $password === '') {
 try {
     $pdo = db();
     $stmt = $pdo->prepare("
-        SELECT u.id AS user_id, u.username, u.password AS password_hash, u.email, u.status,
-               p.id AS patient_id, p.first_name, p.last_name, p.date_of_birth, p.gender, p.phone
+        SELECT u.id AS user_id, u.username, u.password AS password_hash, u.status,
+               p.id AS patient_id, p.patient_no, p.full_name, p.birthdate, p.gender, p.phone
         FROM users u
         JOIN patients p ON p.user_id = u.id
         WHERE u.username = ?
@@ -34,19 +34,16 @@ try {
         redirectTo('/index.php');
     }
 
-    if ($row['status'] !== 'active') {
+    if ($row['status'] !== 'Active') {
         flashMessage('login_error', 'Your account is inactive. Please contact the clinic.', 'warning');
         redirectTo('/index.php');
     }
 
-    $user    = ['id' => $row['user_id'], 'username' => $row['username'], 'email' => $row['email']];
+    $user    = ['username' => $row['username'], 'status' => $row['status']];
     $patient = [
-        'id'            => $row['patient_id'],
-        'first_name'    => $row['first_name'],
-        'last_name'     => $row['last_name'],
-        'date_of_birth' => $row['date_of_birth'],
-        'gender'        => $row['gender'],
-        'phone'         => $row['phone'],
+        'id'         => $row['patient_id'],
+        'patient_no' => $row['patient_no'],
+        'full_name'  => $row['full_name'],
     ];
 
     setPatientSession($patient, $user);
