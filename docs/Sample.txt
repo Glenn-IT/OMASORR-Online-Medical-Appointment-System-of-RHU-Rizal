@@ -1,0 +1,31 @@
+Version 1.00
+-Login / Register - Admin/User
+
+Version 1.01 - Admin
+-Dashboard
+
+Version 1.02 - Admin
+-Manage Appointment
+
+Version 1.03 - Admin
+-View Calendar
+
+Version 1.04 - Admin
+-Doctor Schedule
+
+Version 1.05 - Admin
+-Patient Record
+
+Version 1.06 - Admin
+-Manage User
+
+Version 1.07 - Admin
+-Reports
+
+Version 1.08 - Admin
+-Admin Profile
+
+Version 1.09 - User
+do it like the admin per menu
+and the function and features of per menu must be working but if they are linked on other menus its hould says underconstruction
+
