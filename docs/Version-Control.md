@@ -72,7 +72,7 @@ git tag | sort | xargs -I{} git log -1 --format="{} %H" {}
 
 | Version | Tag Name | Commit Hash |
 |---------|----------|-------------|
-| v1.00 | v1.00 | _(fill after push)_ |
+| v1.00 | v1.00 | `06bed4a76838b78f73a309717af4a8e23ce2f9ca` |
 | v1.01 | v1.01 | _(fill after push)_ |
 | v1.02 | v1.02 | _(fill after push)_ |
 | v1.03 | v1.03 | _(fill after push)_ |
