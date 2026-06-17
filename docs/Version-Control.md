@@ -78,14 +78,14 @@ git tag | sort | xargs -I{} git log -1 --format="{} %H" {}
 | v1.03 | v1.03 | `35a19c47843cbdbb77dece5404a38d711f24e050` |
 | v1.04 | v1.04 | `661ad366aa12faa210dfb23b4fa3a71308cb57ac` |
 | v1.05 | v1.05 | `902e59b2badf816634d03c0f2e7b4475ea25d6ec` |
-| v1.06 | v1.06 | _(fill after push)_ |
-| v1.07 | v1.07 | _(fill after push)_ |
-| v1.08 | v1.08 | _(fill after push)_ |
-| v1.09 | v1.09 | _(fill after push)_ |
-| v1.10 | v1.10 | _(fill after push)_ |
-| v1.11 | v1.11 | _(fill after push)_ |
-| v1.12 | v1.12 | _(fill after push)_ |
-| v1.13 | v1.13 | _(fill after push)_ |
+| v1.06 | v1.06 | `84e691ecbdf52af1481bf6d61e24c13df5b3ca93` |
+| v1.07 | v1.07 | `7c5f3ee73f965dbe1681db514bcd06d61bdeb4df` |
+| v1.08 | v1.08 | `0aec1e1303d2849df9de6f1a54e8627ef8985c6b` |
+| v1.09 | v1.09 | `82687b769a632acb3861949d2e3395fb20fd78f8` |
+| v1.10 | v1.10 | `68c225daa82c7bf5f31446e1693be2f7ce843b97` |
+| v1.11 | v1.11 | `5018adf0b001779c1b54d5919eda855b56d20c28` |
+| v1.12 | v1.12 | `3343ff451bb8639b33ca8a20093854b1327cca1b` |
+| v1.13 | v1.13 | `139faaabac04ac7b40bc577d08a938f86836ff63` |
 
 ---
 
