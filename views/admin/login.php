@@ -58,13 +58,6 @@ require_once __DIR__ . '/../../includes/header.php';
         </div>
       </form>
 
-      <div class="alert alert-warning mt-3" style="margin-bottom:0">
-        <i class="fa-solid fa-triangle-exclamation"></i>
-        <div>
-          <strong>Demo Credentials:</strong><br />
-          Username: <code>admin</code> &nbsp; Password: <code>admin123</code>
-        </div>
-      </div>
     </div>
   </div>
 
