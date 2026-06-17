@@ -77,7 +77,7 @@ git tag | sort | xargs -I{} git log -1 --format="{} %H" {}
 | v1.02 | v1.02 | `1a09ed4bebcf839ff75787b00b6cdbf9ffa50e20` |
 | v1.03 | v1.03 | `35a19c47843cbdbb77dece5404a38d711f24e050` |
 | v1.04 | v1.04 | `661ad366aa12faa210dfb23b4fa3a71308cb57ac` |
-| v1.05 | v1.05 | _(fill after push)_ |
+| v1.05 | v1.05 | `902e59b2badf816634d03c0f2e7b4475ea25d6ec` |
 | v1.06 | v1.06 | _(fill after push)_ |
 | v1.07 | v1.07 | _(fill after push)_ |
 | v1.08 | v1.08 | _(fill after push)_ |
