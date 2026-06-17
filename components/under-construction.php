@@ -1,5 +1,5 @@
 <?php
-define('CURRENT_VERSION', 'v1.02');
+define('CURRENT_VERSION', 'v1.03');
 $base = '/rhu-appointment-system';
 ?>
 <!doctype html>
