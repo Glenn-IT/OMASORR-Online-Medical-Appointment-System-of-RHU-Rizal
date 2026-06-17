@@ -74,16 +74,12 @@ require_once __DIR__ . '/../../includes/header.php';
                 <div class="form-group">
                   <label class="form-label">Preferred Time *</label>
                   <select class="form-select" id="aptTime" name="time" required>
-                    <option value="">-- Select Time --</option>
-                    <option value="08:00">8:00 AM</option><option value="08:30">8:30 AM</option>
-                    <option value="09:00">9:00 AM</option><option value="09:30">9:30 AM</option>
-                    <option value="10:00">10:00 AM</option><option value="10:30">10:30 AM</option>
-                    <option value="11:00">11:00 AM</option><option value="11:30">11:30 AM</option>
-                    <option value="13:00">1:00 PM</option><option value="13:30">1:30 PM</option>
-                    <option value="14:00">2:00 PM</option><option value="14:30">2:30 PM</option>
-                    <option value="15:00">3:00 PM</option><option value="15:30">3:30 PM</option>
-                    <option value="16:00">4:00 PM</option>
+                    <option value="">-- Select a date first --</option>
                   </select>
+                  <div class="alert alert-warning mt-1" id="timeNotice" style="display:none;margin-bottom:0;padding:8px 12px">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                    <div>That time slot is already booked. Please choose another.</div>
+                  </div>
                 </div>
               </div>
               <div class="form-group">
@@ -143,6 +139,13 @@ $extraScripts = <<<'JS'
 <script>
   const BASE = '/rhu-appointment-system';
 
+  const TIME_SLOTS = [
+    ['08:00','8:00 AM'],['08:30','8:30 AM'],['09:00','9:00 AM'],['09:30','9:30 AM'],
+    ['10:00','10:00 AM'],['10:30','10:30 AM'],['11:00','11:00 AM'],['11:30','11:30 AM'],
+    ['13:00','1:00 PM'],['13:30','1:30 PM'],['14:00','2:00 PM'],['14:30','2:30 PM'],
+    ['15:00','3:00 PM'],['15:30','3:30 PM'],['16:00','4:00 PM']
+  ];
+
   const cal = new RHUCalendar('bookingCalendar', {
     onSelect: (date) => {
       document.getElementById('aptDate').value = date;
@@ -157,6 +160,10 @@ $extraScripts = <<<'JS'
   async function loadTimeSlots(date) {
     const card      = document.getElementById('timeSlotsCard');
     const container = document.getElementById('timeSlots');
+    const selectEl  = document.getElementById('aptTime');
+    const notice    = document.getElementById('timeNotice');
+    const prevVal   = selectEl.value;
+
     card.style.display = 'block';
     container.innerHTML = '<p style="text-align:center;color:#888;font-size:13px">Loading...</p>';
 
@@ -167,20 +174,34 @@ $extraScripts = <<<'JS'
       bookedTimes = data.booked_times || [];
     } catch(e) {}
 
-    const slots = [
-      ['08:00','8:00 AM'],['08:30','8:30 AM'],['09:00','9:00 AM'],['09:30','9:30 AM'],
-      ['10:00','10:00 AM'],['10:30','10:30 AM'],['11:00','11:00 AM'],['11:30','11:30 AM'],
-      ['13:00','1:00 PM'],['13:30','1:30 PM'],['14:00','2:00 PM'],['14:30','2:30 PM'],
-      ['15:00','3:00 PM'],['15:30','3:30 PM'],['16:00','4:00 PM']
-    ];
-    container.innerHTML = slots.map(([val, label]) => {
+    // Rebuild select options to reflect availability for the chosen date
+    selectEl.innerHTML = '<option value="">-- Select Time --</option>' +
+      TIME_SLOTS.map(([val, label]) => {
+        const taken = bookedTimes.includes(val);
+        return `<option value="${val}"${taken ? ' disabled' : ''}>${label}${taken ? ' — Booked' : ''}</option>`;
+      }).join('');
+
+    // Restore previous selection if it is still available; warn if it is now taken
+    if (prevVal && bookedTimes.includes(prevVal)) {
+      selectEl.value = '';
+      notice.style.display = 'flex';
+    } else if (prevVal) {
+      selectEl.value = prevVal;
+      notice.style.display = 'none';
+    } else {
+      notice.style.display = 'none';
+    }
+
+    // Update visual time-slot grid
+    container.innerHTML = TIME_SLOTS.map(([val, label]) => {
       const taken = bookedTimes.includes(val);
       return `<div onclick="${!taken ? `selectTimeSlot('${val}', this)` : ''}"
         style="padding:8px;text-align:center;border-radius:8px;font-size:12px;font-weight:500;
                cursor:${taken?'not-allowed':'pointer'};
                background:${taken?'#fdecea':'#e8f5ee'};
                color:${taken?'var(--danger)':'var(--primary)'};
-               border:1.5px solid ${taken?'#f1948a':'#82e0aa'};transition:var(--transition);">
+               border:1.5px solid ${taken?'#f1948a':'#82e0aa'};transition:var(--transition);"
+        title="${taken?'This slot is already booked':'Click to select this slot'}">
         ${label}<br><span style="font-size:10px;opacity:.7">${taken?'Taken':'Available'}</span>
       </div>`;
     }).join('');
@@ -188,6 +209,7 @@ $extraScripts = <<<'JS'
 
   function selectTimeSlot(time, el) {
     document.getElementById('aptTime').value = time;
+    document.getElementById('timeNotice').style.display = 'none';
     document.querySelectorAll('#timeSlots > div').forEach(d => d.style.outline = 'none');
     el.style.outline = '2px solid var(--primary)';
     showToast('Time slot selected: ' + formatTime(time), 'info');

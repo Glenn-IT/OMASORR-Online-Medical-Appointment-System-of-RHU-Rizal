@@ -2,6 +2,7 @@
 require_once __DIR__ . '/../config/config.php';
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../config/auth.php';
+require_once __DIR__ . '/../config/mailer.php';
 
 requireLogin('patient');
 
@@ -25,8 +26,13 @@ try {
 
     // Verify the appointment belongs to this patient and is still Pending/Approved
     $stmt = $pdo->prepare("
-        SELECT id, appt_no, status FROM appointments
-        WHERE id = ? AND patient_id = ?
+        SELECT a.id, a.appt_no, a.status, a.date, a.time, a.service,
+               p.full_name AS patient_name, p.email AS patient_email,
+               d.name AS doctor_name
+        FROM appointments a
+        JOIN patients p ON p.id = a.patient_id
+        JOIN doctors  d ON d.id = a.doctor_id
+        WHERE a.id = ? AND a.patient_id = ?
         LIMIT 1
     ");
     $stmt->execute([$apptId, $patientId]);
@@ -51,6 +57,17 @@ try {
         VALUES (?, ?, ?, 'Cancelled', 'Cancelled by patient')
     ");
     $log->execute([$apptId, $username, $appt['status']]);
+
+    // Send cancellation confirmation email
+    if (!empty($appt['patient_email'])) {
+        sendCancellationEmail($appt['patient_email'], $appt['patient_name'], [
+            'appt_no' => $appt['appt_no'],
+            'date'    => $appt['date'],
+            'time'    => $appt['time'],
+            'service' => $appt['service'],
+            'doctor'  => $appt['doctor_name'],
+        ]);
+    }
 
     flashMessage('book_success', "Appointment {$appt['appt_no']} has been cancelled.", 'info');
     redirectTo('/views/user/my-appointments.php');

@@ -118,7 +118,7 @@ require_once __DIR__ . '/../../includes/header.php';
           <label class="form-label">Complete Address *</label>
           <input type="text" class="form-control" id="address" name="address" placeholder="Brgy., Municipality, Province" value="<?= htmlspecialchars($_POST['address'] ?? '') ?>" />
         </div>
-        <button class="btn btn-primary btn-block" onclick="goToStep2()">
+        <button type="button" class="btn btn-primary btn-block" onclick="goToStep2()">
           Next <i class="fa-solid fa-arrow-right"></i>
         </button>
       </div>

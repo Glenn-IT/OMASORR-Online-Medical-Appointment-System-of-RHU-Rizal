@@ -12,7 +12,7 @@ $csrf      = csrfField();
 $pdo = db();
 
 $appointments = $pdo->query("
-    SELECT a.id, a.appt_no, a.service, a.date, a.time, a.reason, a.status, a.created_at,
+    SELECT a.id, a.appt_no, a.service, a.date, a.time, a.reason, a.status, a.created_at, a.admin_note,
            p.full_name AS patient_name, p.patient_no,
            d.name AS doctor_name
     FROM appointments a
@@ -123,12 +123,10 @@ require_once __DIR__ . '/../../includes/header.php';
                       <input type="hidden" name="status" value="Approved">
                       <button type="submit" class="btn btn-sm btn-success" title="Approve"><i class="fa-solid fa-check"></i></button>
                     </form>
-                    <form method="post" action="<?= BASE_URL ?>/actions/admin/update-appointment.php" style="display:inline">
-                      <?= $csrf ?>
-                      <input type="hidden" name="appointment_id" value="<?= $a['id'] ?>">
-                      <input type="hidden" name="status" value="Rejected">
-                      <button type="submit" class="btn btn-sm btn-danger" title="Reject"><i class="fa-solid fa-xmark"></i></button>
-                    </form>
+                    <button type="button" class="btn btn-sm btn-danger" title="Reject"
+                            onclick="openReasonModal(<?= $a['id'] ?>, 'Rejected', false)">
+                      <i class="fa-solid fa-xmark"></i>
+                    </button>
                     <?php elseif ($a['status'] === 'Approved'): ?>
                     <form method="post" action="<?= BASE_URL ?>/actions/admin/update-appointment.php" style="display:inline">
                       <?= $csrf ?>
@@ -136,12 +134,10 @@ require_once __DIR__ . '/../../includes/header.php';
                       <input type="hidden" name="status" value="Completed">
                       <button type="submit" class="btn btn-sm btn-success" title="Mark Complete"><i class="fa-solid fa-circle-check"></i></button>
                     </form>
-                    <form method="post" action="<?= BASE_URL ?>/actions/admin/update-appointment.php" style="display:inline">
-                      <?= $csrf ?>
-                      <input type="hidden" name="appointment_id" value="<?= $a['id'] ?>">
-                      <input type="hidden" name="status" value="Cancelled">
-                      <button type="submit" class="btn btn-sm btn-danger" title="Cancel"><i class="fa-solid fa-ban"></i></button>
-                    </form>
+                    <button type="button" class="btn btn-sm btn-danger" title="Cancel"
+                            onclick="openReasonModal(<?= $a['id'] ?>, 'Cancelled', false)">
+                      <i class="fa-solid fa-ban"></i>
+                    </button>
                     <?php endif; ?>
                   </div>
                 </td>
@@ -209,6 +205,34 @@ require_once __DIR__ . '/../../includes/header.php';
 </div>
 
 
+<!-- Reason Modal (Cancel / Reject) -->
+<div class="modal-overlay" id="reasonModal">
+  <div class="modal-box sm">
+    <div class="modal-header">
+      <h5 id="reasonModalTitle"><i class="fa-solid fa-comment-dots"></i> Add Reason</h5>
+      <button class="modal-close" data-modal-close="reasonModal"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <form method="post" action="<?= BASE_URL ?>/actions/admin/update-appointment.php" id="reasonForm">
+      <?= $csrf ?>
+      <input type="hidden" name="appointment_id" id="reasonApptId">
+      <input type="hidden" name="status" id="reasonStatus">
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Reason <span style="color:var(--danger)">*</span></label>
+          <textarea class="form-control" name="note" id="reasonNote" rows="3"
+                    placeholder="Enter reason for this action..." required></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-modal-close="reasonModal">Back</button>
+        <button type="submit" class="btn btn-danger" id="reasonSubmitBtn">
+          <i class="fa-solid fa-check"></i> Confirm
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <?php
 $appts_json = json_encode($appointments, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT);
 $csrf_js    = json_encode(csrfToken());
@@ -242,53 +266,63 @@ $extraScripts = <<<SCRIPTS
   function viewAppointment(id) {
     const a = APPTS.find(x => x.id == id);
     if (!a) return;
-    document.getElementById("viewBody").innerHTML = `
-      <div class="detail-list">
-        <div class="detail-item"><div class="detail-label">Appointment ID</div><div class="detail-value fw-600 text-primary">\${a.appt_no}</div></div>
-        <div class="detail-item"><div class="detail-label">Patient Name</div><div class="detail-value">\${a.patient_name}</div></div>
-        <div class="detail-item"><div class="detail-label">Patient No</div><div class="detail-value">\${a.patient_no}</div></div>
-        <div class="detail-item"><div class="detail-label">Service</div><div class="detail-value">\${a.service}</div></div>
-        <div class="detail-item"><div class="detail-label">Doctor</div><div class="detail-value">\${a.doctor_name || 'TBA'}</div></div>
-        <div class="detail-item"><div class="detail-label">Date</div><div class="detail-value">\${formatDate(a.date)}</div></div>
-        <div class="detail-item"><div class="detail-label">Time</div><div class="detail-value">\${formatTime(a.time)}</div></div>
-        <div class="detail-item"><div class="detail-label">Reason</div><div class="detail-value">\${a.reason || '-'}</div></div>
-        <div class="detail-item"><div class="detail-label">Status</div><div class="detail-value">\${statusBadge(a.status)}</div></div>
-        <div class="detail-item"><div class="detail-label">Booked On</div><div class="detail-value">\${formatDate(a.created_at)}</div></div>
-      </div>
-    `;
+    const adminNoteHtml = (a.status === 'Cancelled' || a.status === 'Rejected') && a.admin_note
+      ? '<div class="detail-item"><div class="detail-label">Admin Note</div>' +
+        '<div class="detail-value" style="color:var(--danger)">' + a.admin_note + '</div></div>'
+      : '';
+    document.getElementById("viewBody").innerHTML =
+      '<div class="detail-list">' +
+      '<div class="detail-item"><div class="detail-label">Appointment ID</div><div class="detail-value fw-600 text-primary">' + a.appt_no + '</div></div>' +
+      '<div class="detail-item"><div class="detail-label">Patient Name</div><div class="detail-value">' + a.patient_name + '</div></div>' +
+      '<div class="detail-item"><div class="detail-label">Patient No</div><div class="detail-value">' + a.patient_no + '</div></div>' +
+      '<div class="detail-item"><div class="detail-label">Service</div><div class="detail-value">' + a.service + '</div></div>' +
+      '<div class="detail-item"><div class="detail-label">Doctor</div><div class="detail-value">' + (a.doctor_name || 'TBA') + '</div></div>' +
+      '<div class="detail-item"><div class="detail-label">Date</div><div class="detail-value">' + formatDate(a.date) + '</div></div>' +
+      '<div class="detail-item"><div class="detail-label">Time</div><div class="detail-value">' + formatTime(a.time) + '</div></div>' +
+      '<div class="detail-item"><div class="detail-label">Reason</div><div class="detail-value">' + (a.reason || '-') + '</div></div>' +
+      '<div class="detail-item"><div class="detail-label">Status</div><div class="detail-value">' + statusBadge(a.status) + '</div></div>' +
+      '<div class="detail-item"><div class="detail-label">Booked On</div><div class="detail-value">' + formatDate(a.created_at) + '</div></div>' +
+      adminNoteHtml +
+      '</div>';
     const acts = document.getElementById("viewActions");
     acts.innerHTML = '<button class="btn btn-secondary" data-modal-close="viewModal">Close</button>';
     if (a.status === "Pending") {
-      acts.innerHTML += `
-        <form method="post" action="/rhu-appointment-system/actions/admin/update-appointment.php" style="display:inline">
-          <input type="hidden" name="csrf_token" value="${CSRF_TOKEN}">
-          <input type="hidden" name="appointment_id" value="\${a.id}">
-          <input type="hidden" name="status" value="Approved">
-          <button type="submit" class="btn btn-success"><i class="fa-solid fa-check"></i> Approve</button>
-        </form>
-        <form method="post" action="/rhu-appointment-system/actions/admin/update-appointment.php" style="display:inline">
-          <input type="hidden" name="csrf_token" value="${CSRF_TOKEN}">
-          <input type="hidden" name="appointment_id" value="\${a.id}">
-          <input type="hidden" name="status" value="Rejected">
-          <button type="submit" class="btn btn-danger"><i class="fa-solid fa-xmark"></i> Reject</button>
-        </form>`;
+      acts.innerHTML +=
+        '<form method="post" action="/rhu-appointment-system/actions/admin/update-appointment.php" style="display:inline">' +
+        '<input type="hidden" name="csrf_token" value="' + CSRF_TOKEN + '">' +
+        '<input type="hidden" name="appointment_id" value="' + a.id + '">' +
+        '<input type="hidden" name="status" value="Approved">' +
+        '<button type="submit" class="btn btn-success"><i class="fa-solid fa-check"></i> Approve</button>' +
+        '</form>' +
+        '<button type="button" class="btn btn-danger" onclick="openReasonModal(' + a.id + ', \'Rejected\', true)">' +
+        '<i class="fa-solid fa-xmark"></i> Reject</button>';
     }
     if (a.status === "Approved") {
-      acts.innerHTML += `
-        <form method="post" action="/rhu-appointment-system/actions/admin/update-appointment.php" style="display:inline">
-          <input type="hidden" name="csrf_token" value="${CSRF_TOKEN}">
-          <input type="hidden" name="appointment_id" value="\${a.id}">
-          <input type="hidden" name="status" value="Completed">
-          <button type="submit" class="btn btn-success"><i class="fa-solid fa-circle-check"></i> Mark Complete</button>
-        </form>
-        <form method="post" action="/rhu-appointment-system/actions/admin/update-appointment.php" style="display:inline">
-          <input type="hidden" name="csrf_token" value="${CSRF_TOKEN}">
-          <input type="hidden" name="appointment_id" value="\${a.id}">
-          <input type="hidden" name="status" value="Cancelled">
-          <button type="submit" class="btn btn-danger"><i class="fa-solid fa-ban"></i> Cancel</button>
-        </form>`;
+      acts.innerHTML +=
+        '<form method="post" action="/rhu-appointment-system/actions/admin/update-appointment.php" style="display:inline">' +
+        '<input type="hidden" name="csrf_token" value="' + CSRF_TOKEN + '">' +
+        '<input type="hidden" name="appointment_id" value="' + a.id + '">' +
+        '<input type="hidden" name="status" value="Completed">' +
+        '<button type="submit" class="btn btn-success"><i class="fa-solid fa-circle-check"></i> Mark Complete</button>' +
+        '</form>' +
+        '<button type="button" class="btn btn-danger" onclick="openReasonModal(' + a.id + ', \'Cancelled\', true)">' +
+        '<i class="fa-solid fa-ban"></i> Cancel</button>';
     }
     openModal("viewModal");
+  }
+
+  function openReasonModal(apptId, status, fromViewModal) {
+    if (fromViewModal) closeModal('viewModal');
+    document.getElementById('reasonApptId').value = apptId;
+    document.getElementById('reasonStatus').value = status;
+    document.getElementById('reasonNote').value = '';
+    const isCancel = status === 'Cancelled';
+    document.getElementById('reasonModalTitle').innerHTML =
+      '<i class="fa-solid fa-comment-dots"></i> ' + (isCancel ? 'Cancel Appointment' : 'Reject Appointment');
+    const btn = document.getElementById('reasonSubmitBtn');
+    btn.innerHTML = '<i class="fa-solid fa-' + (isCancel ? 'ban' : 'xmark') + '"></i> ' +
+      (isCancel ? 'Confirm Cancel' : 'Confirm Reject');
+    openModal('reasonModal');
   }
 
   document.addEventListener("DOMContentLoaded", function () {

@@ -2,6 +2,7 @@
 require_once __DIR__ . '/../../config/config.php';
 require_once __DIR__ . '/../../config/database.php';
 require_once __DIR__ . '/../../config/auth.php';
+require_once __DIR__ . '/../../config/mailer.php';
 
 requireLogin('admin');
 
@@ -23,10 +24,23 @@ if (!$apptId || !in_array($newStatus, $allowed)) {
     redirectTo('/views/admin/appointments.php');
 }
 
+if (in_array($newStatus, ['Cancelled', 'Rejected']) && $note === '') {
+    flashMessage('appt_error', 'A reason is required when cancelling or rejecting an appointment.', 'danger');
+    redirectTo('/views/admin/appointments.php');
+}
+
 try {
     $pdo = db();
 
-    $stmt = $pdo->prepare("SELECT id, appt_no, status FROM appointments WHERE id = ? LIMIT 1");
+    $stmt = $pdo->prepare("
+        SELECT a.id, a.appt_no, a.status, a.date, a.time, a.service,
+               p.full_name AS patient_name, p.email AS patient_email,
+               d.name AS doctor_name
+        FROM appointments a
+        JOIN patients p ON p.id = a.patient_id
+        JOIN doctors  d ON d.id = a.doctor_id
+        WHERE a.id = ? LIMIT 1
+    ");
     $stmt->execute([$apptId]);
     $appt = $stmt->fetch();
 
@@ -50,7 +64,10 @@ try {
     // Update status (and optionally date/time for reschedule)
     $newDate = trim($_POST['new_date'] ?? '');
     $newTime = trim($_POST['new_time'] ?? '');
-    if ($newDate && $newTime) {
+    if (in_array($newStatus, ['Cancelled', 'Rejected'])) {
+        $pdo->prepare("UPDATE appointments SET status = ?, admin_note = ? WHERE id = ?")
+            ->execute([$newStatus, $note, $apptId]);
+    } elseif ($newDate && $newTime) {
         $pdo->prepare("UPDATE appointments SET status = ?, date = ?, time = ? WHERE id = ?")
             ->execute([$newStatus, $newDate, $newTime, $apptId]);
     } else {
@@ -64,6 +81,23 @@ try {
         INSERT INTO appointment_logs (appointment_id, changed_by, old_status, new_status, note)
         VALUES (?, ?, ?, ?, ?)
     ")->execute([$apptId, $username, $oldStatus, $newStatus, $logNote]);
+
+    // Send email notification to patient
+    if (!empty($appt['patient_email'])) {
+        sendAppointmentStatusEmail(
+            $appt['patient_email'],
+            $appt['patient_name'],
+            [
+                'appt_no' => $appt['appt_no'],
+                'date'    => $appt['date'],
+                'time'    => $appt['time'],
+                'service' => $appt['service'],
+                'doctor'  => $appt['doctor_name'],
+            ],
+            $newStatus,
+            $note
+        );
+    }
 
     $msgs = [
         'Approved'  => "Appointment {$appt['appt_no']} approved.",

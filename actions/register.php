@@ -2,6 +2,7 @@
 require_once __DIR__ . '/../config/config.php';
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../config/auth.php';
+require_once __DIR__ . '/../config/mailer.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     redirectTo('/views/user/signup.php');
@@ -89,6 +90,8 @@ try {
     ]);
 
     $pdo->commit();
+
+    sendWelcomeEmail($email, trim("$firstName $lastName"), $username, $patientNo);
 
     flashMessage('signup_success', 'Account created successfully! You can now log in.', 'success');
     redirectTo('/index.php');

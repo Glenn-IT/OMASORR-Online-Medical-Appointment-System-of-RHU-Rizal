@@ -2,6 +2,7 @@
 require_once __DIR__ . '/../config/config.php';
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../config/auth.php';
+require_once __DIR__ . '/../config/mailer.php';
 
 requireLogin('patient');
 
@@ -76,6 +77,26 @@ try {
         VALUES (?, ?, '', 'Pending', 'Appointment booked by patient')
     ");
     $log->execute([$apptId, $username]);
+
+    // Send booking confirmation email
+    $patientRow = $pdo->prepare("SELECT full_name, email FROM patients WHERE id = ? LIMIT 1");
+    $patientRow->execute([$patientId]);
+    $patient = $patientRow->fetch();
+
+    $doctorRow = $pdo->prepare("SELECT name FROM doctors WHERE id = ? LIMIT 1");
+    $doctorRow->execute([$doctorId]);
+    $doctorName = (string) $doctorRow->fetchColumn();
+
+    if ($patient && $patient['email']) {
+        sendBookingConfirmation($patient['email'], $patient['full_name'], [
+            'appt_no' => $apptNo,
+            'date'    => $date,
+            'time'    => $time,
+            'service' => $serviceName,
+            'doctor'  => $doctorName,
+            'reason'  => $reason,
+        ]);
+    }
 
     flashMessage('book_success', "Appointment {$apptNo} booked successfully! Awaiting approval.", 'success');
     redirectTo('/views/user/my-appointments.php');

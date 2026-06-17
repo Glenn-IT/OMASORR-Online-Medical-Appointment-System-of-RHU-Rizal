@@ -5,16 +5,15 @@ require_once __DIR__ . '/../../config/auth.php';
 
 requireLogin('patient');
 $session   = getPatientSession();
-$patient   = $session['patient'];
-$fullName  = trim($patient['first_name'] . ' ' . $patient['last_name']);
+$fullName  = $session['full_name'];
 $initial   = strtoupper(mb_substr($fullName, 0, 1));
-$patientId = (int) $patient['id'];
+$patientId = (int) $session['id'];
 
 $pdo = db();
 
 // Fetch all this patient's appointments
 $stmt = $pdo->prepare("
-    SELECT a.id, a.appt_no, a.service, a.date, a.time, a.reason, a.status, a.created_at,
+    SELECT a.id, a.appt_no, a.service, a.date, a.time, a.reason, a.status, a.created_at, a.admin_note,
            d.name AS doctor_name
     FROM appointments a
     LEFT JOIN doctors d ON d.id = a.doctor_id
@@ -96,11 +95,13 @@ require_once __DIR__ . '/../../includes/header.php';
                   <td><div class="actions">
                     <button class="btn btn-sm btn-info" onclick="viewAppointment(<?= $a['id'] ?>)"><i class="fa-solid fa-eye"></i></button>
                     <?php if (in_array($a['status'], ['Pending','Approved'])): ?>
-                    <form method="post" action="<?= BASE_URL ?>/actions/cancel-appointment.php" style="display:inline"
-                          onsubmit="return confirm('Cancel this appointment?')">
+                    <form method="post" action="<?= BASE_URL ?>/actions/cancel-appointment.php" style="display:inline" id="cancelForm<?= $a['id'] ?>">
                       <?= csrfField() ?>
                       <input type="hidden" name="appointment_id" value="<?= $a['id'] ?>">
-                      <button type="submit" class="btn btn-sm btn-danger"><i class="fa-solid fa-trash"></i></button>
+                      <button type="button" class="btn btn-sm btn-danger"
+                              onclick="openCancelModal(<?= $a['id'] ?>, '<?= htmlspecialchars($a['appt_no']) ?>')">
+                        <i class="fa-solid fa-calendar-xmark"></i>
+                      </button>
                     </form>
                     <?php endif; ?>
                   </div></td>
@@ -154,40 +155,28 @@ require_once __DIR__ . '/../../includes/header.php';
   <!-- Cancel Confirm Modal -->
   <div class="modal-overlay" id="deleteModal">
     <div class="modal-box sm">
-      <div class="modal-header"><h5><i class="fa-solid fa-trash" style="color:var(--danger)"></i> Cancel Appointment</h5><button class="modal-close" data-modal-close="deleteModal"><i class="fa-solid fa-xmark"></i></button></div>
+      <div class="modal-header"><h5><i class="fa-solid fa-calendar-xmark" style="color:var(--danger)"></i> Cancel Appointment</h5><button class="modal-close" data-modal-close="deleteModal"><i class="fa-solid fa-xmark"></i></button></div>
       <div class="modal-body">
-        <p style="font-size:13.5px;color:#555">Are you sure you want to cancel this appointment? This action cannot be undone.</p>
-        <input type="hidden" id="deleteId" />
+        <div class="alert alert-warning mb-2"><i class="fa-solid fa-triangle-exclamation"></i><div>This action cannot be undone.</div></div>
+        <p style="font-size:13.5px;color:#555">Are you sure you want to cancel appointment <strong id="cancelApptNo"></strong>?</p>
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary" data-modal-close="deleteModal">Keep It</button>
-        <button class="btn btn-danger" onclick="confirmDelete()"><i class="fa-solid fa-trash"></i> Cancel Appointment</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Cancel Confirm Modal (kept for future use) -->
-  <div class="modal-overlay" id="deleteModal">
-    <div class="modal-box sm">
-      <div class="modal-header"><h5><i class="fa-solid fa-trash" style="color:var(--danger)"></i> Cancel Appointment</h5><button class="modal-close" data-modal-close="deleteModal"><i class="fa-solid fa-xmark"></i></button></div>
-      <div class="modal-body">
-        <p style="font-size:13.5px;color:#555">Are you sure you want to cancel this appointment? This action cannot be undone.</p>
-      </div>
-      <div class="modal-footer">
-        <button class="btn btn-secondary" data-modal-close="deleteModal">Keep It</button>
+        <button class="btn btn-danger" id="confirmCancelBtn"><i class="fa-solid fa-calendar-xmark"></i> Yes, Cancel It</button>
       </div>
     </div>
   </div>
 
 <?php
 $apptJson = json_encode(array_map(fn($a) => [
-    'id'          => $a['id'],
+    'id'          => (int) $a['id'],
     'appt_no'     => $a['appt_no'],
     'service'     => $a['service'],
     'doctor_name' => $a['doctor_name'] ?? 'TBA',
     'date'        => $a['date'],
     'time'        => $a['time'],
     'reason'      => $a['reason'],
+    'admin_note'  => $a['admin_note'] ?? '',
     'status'      => $a['status'],
     'created_at'  => substr($a['created_at'], 0, 10),
 ], $appointments), JSON_HEX_TAG);
@@ -197,7 +186,6 @@ $extraScripts = <<<JS
   const APPTS = {$apptJson};
   let currentFilter = 'All';
 
-  // Format dates/times/badges
   document.querySelectorAll('.fmt-date').forEach(el => el.textContent = formatDate(el.dataset.date));
   document.querySelectorAll('.fmt-time').forEach(el => el.textContent = formatTime(el.dataset.time));
   document.querySelectorAll('.status-badge-wrap').forEach(el => el.innerHTML = statusBadge(el.dataset.status));
@@ -225,18 +213,31 @@ $extraScripts = <<<JS
 
   function viewAppointment(id) {
     const a = APPTS.find(x => x.id === id); if (!a) return;
-    document.getElementById('viewModalBody').innerHTML = \`
-      <div class="detail-list">
-        <div class="detail-item"><div class="detail-label">Appointment ID</div><div class="detail-value fw-600 text-primary">\${a.appt_no}</div></div>
-        <div class="detail-item"><div class="detail-label">Service</div><div class="detail-value">\${a.service}</div></div>
-        <div class="detail-item"><div class="detail-label">Doctor</div><div class="detail-value">\${a.doctor_name}</div></div>
-        <div class="detail-item"><div class="detail-label">Date</div><div class="detail-value">\${formatDate(a.date)}</div></div>
-        <div class="detail-item"><div class="detail-label">Time</div><div class="detail-value">\${formatTime(a.time)}</div></div>
-        <div class="detail-item"><div class="detail-label">Reason</div><div class="detail-value">\${a.reason}</div></div>
-        <div class="detail-item"><div class="detail-label">Status</div><div class="detail-value">\${statusBadge(a.status)}</div></div>
-        <div class="detail-item"><div class="detail-label">Booked On</div><div class="detail-value">\${formatDate(a.created_at)}</div></div>
-      </div>\`;
+    const adminNoteHtml = (a.status === 'Cancelled' || a.status === 'Rejected') && a.admin_note
+      ? '<div class="detail-item"><div class="detail-label">Reason from Admin</div>' +
+        '<div class="detail-value" style="color:var(--danger)">' + a.admin_note + '</div></div>'
+      : '';
+    document.getElementById('viewModalBody').innerHTML =
+      '<div class="detail-list">' +
+      '<div class="detail-item"><div class="detail-label">Appointment ID</div><div class="detail-value fw-600 text-primary">' + a.appt_no + '</div></div>' +
+      '<div class="detail-item"><div class="detail-label">Service</div><div class="detail-value">' + a.service + '</div></div>' +
+      '<div class="detail-item"><div class="detail-label">Doctor</div><div class="detail-value">' + a.doctor_name + '</div></div>' +
+      '<div class="detail-item"><div class="detail-label">Date</div><div class="detail-value">' + formatDate(a.date) + '</div></div>' +
+      '<div class="detail-item"><div class="detail-label">Time</div><div class="detail-value">' + formatTime(a.time) + '</div></div>' +
+      '<div class="detail-item"><div class="detail-label">Reason</div><div class="detail-value">' + (a.reason || '-') + '</div></div>' +
+      '<div class="detail-item"><div class="detail-label">Status</div><div class="detail-value">' + statusBadge(a.status) + '</div></div>' +
+      '<div class="detail-item"><div class="detail-label">Booked On</div><div class="detail-value">' + formatDate(a.created_at) + '</div></div>' +
+      adminNoteHtml +
+      '</div>';
     openModal('viewModal');
+  }
+
+  function openCancelModal(id, apptNo) {
+    document.getElementById('cancelApptNo').textContent = apptNo;
+    document.getElementById('confirmCancelBtn').onclick = function() {
+      document.getElementById('cancelForm' + id).submit();
+    };
+    openModal('deleteModal');
   }
 </script>
 JS;

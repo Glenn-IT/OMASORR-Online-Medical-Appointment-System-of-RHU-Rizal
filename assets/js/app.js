@@ -265,7 +265,8 @@ function setSidebarActive() {
 // ============================================================
 function formatDate(dateStr) {
   if (!dateStr) return "—";
-  const d = new Date(dateStr + "T00:00:00");
+  const datePart = String(dateStr).split(/[T ]/)[0]; // strip time from DATETIME strings
+  const d = new Date(datePart + "T00:00:00");
   return d.toLocaleDateString("en-PH", {
     year: "numeric",
     month: "long",

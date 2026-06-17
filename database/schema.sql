@@ -81,6 +81,7 @@ CREATE TABLE IF NOT EXISTS appointments (
   date        DATE NOT NULL,
   time        TIME NOT NULL,
   reason      TEXT,
+  admin_note  TEXT,                       -- set by admin on Cancelled/Rejected
   status      ENUM('Pending','Approved','Rejected','Completed','Cancelled')
               NOT NULL DEFAULT 'Pending',
   created_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,

@@ -1,19 +1,8 @@
 <?php
 require_once __DIR__ . '/../../config/auth.php';
-require_once __DIR__ . '/../../c        <div class="topbar-right">
-        <button class="btn btn-primary btn-sm no-print" onclick="window.print()">
-          <i class="fa-solid fa-print"></i> Print Report
-        </button>
-        <a href="/rhu-appointment-system/actions/admin/export-report.php?month=<?= urlencode($fMonth) ?>&status=<?= urlencode($fStatus) ?>&service=<?= urlencode($fService) ?>" class="btn btn-secondary btn-sm no-print">
-          <i class="fa-solid fa-file-csv"></i> Export CSV
-        </a>
-        <div class="topbar-user">
-          <div class="avatar"><?= $initial ?></div>
-          <span class="user-name"><?= $adminName ?></span>
-        </div>
-      </div>abase.php';
+require_once __DIR__ . '/../../config/database.php';
 requireLogin('admin');
-$admin    = getAdminSession();
+$admin     = getAdminSession();
 $adminName = htmlspecialchars($admin['full_name'] ?? $admin['username']);
 $initial   = strtoupper(substr($adminName, 0, 1));
 
@@ -23,18 +12,18 @@ $fStatus  = $_GET['status']  ?? '';
 $fService = $_GET['service'] ?? '';
 
 // --- Build query ---
-$where = ['1=1'];
+$where  = ['1=1'];
 $params = [];
 if ($fMonth) {
-    $where[] = 'MONTH(a.date) = :month';
+    $where[]          = 'MONTH(a.date) = :month';
     $params[':month'] = (int)$fMonth;
 }
 if ($fStatus) {
-    $where[] = 'a.status = :status';
+    $where[]           = 'a.status = :status';
     $params[':status'] = $fStatus;
 }
 if ($fService) {
-    $where[] = 'a.service = :service';
+    $where[]            = 'a.service = :service';
     $params[':service'] = $fService;
 }
 $sql = 'SELECT a.appt_no, p.full_name AS patient_name, a.service,
@@ -55,7 +44,7 @@ $serviceCounts = []; $statusCounts = [];
 foreach ($appts as $a) {
     if ($a['status'] === 'Pending')   $pending++;
     if ($a['status'] === 'Completed') $completed++;
-    if (in_array($a['status'], ['Cancelled','Rejected'])) $cancelled++;
+    if (in_array($a['status'], ['Cancelled', 'Rejected'])) $cancelled++;
     $serviceCounts[$a['service']] = ($serviceCounts[$a['service']] ?? 0) + 1;
     $statusCounts[$a['status']]   = ($statusCounts[$a['status']]   ?? 0) + 1;
 }
@@ -65,10 +54,10 @@ $topServices = array_slice($serviceCounts, 0, 6, true);
 // --- Services list for filter dropdown ---
 $services = db()->query("SELECT name FROM services ORDER BY name")->fetchAll(PDO::FETCH_COLUMN);
 
-$CHART_SERVICE_LABELS = json_encode(array_keys($topServices),   JSON_HEX_TAG|JSON_HEX_AMP);
-$CHART_SERVICE_DATA   = json_encode(array_values($topServices), JSON_HEX_TAG|JSON_HEX_AMP);
-$CHART_STATUS_LABELS  = json_encode(array_keys($statusCounts),  JSON_HEX_TAG|JSON_HEX_AMP);
-$CHART_STATUS_DATA    = json_encode(array_values($statusCounts),JSON_HEX_TAG|JSON_HEX_AMP);
+$CHART_SERVICE_LABELS = json_encode(array_keys($topServices),   JSON_HEX_TAG | JSON_HEX_AMP);
+$CHART_SERVICE_DATA   = json_encode(array_values($topServices), JSON_HEX_TAG | JSON_HEX_AMP);
+$CHART_STATUS_LABELS  = json_encode(array_keys($statusCounts),  JSON_HEX_TAG | JSON_HEX_AMP);
+$CHART_STATUS_DATA    = json_encode(array_values($statusCounts), JSON_HEX_TAG | JSON_HEX_AMP);
 
 $pageTitle = 'Reports – RHU Rizal Admin';
 $extraHead = <<<'HTML'
@@ -99,12 +88,15 @@ require_once __DIR__ . '/../../includes/header.php';
         </div>
       </div>
       <div class="topbar-right">
-        <button class="btn btn-primary btn-sm" onclick="window.print()">
+        <button class="btn btn-primary btn-sm no-print" onclick="window.print()">
           <i class="fa-solid fa-print"></i> Print Report
         </button>
+        <a href="/rhu-appointment-system/actions/admin/export-report.php?month=<?= urlencode($fMonth) ?>&status=<?= urlencode($fStatus) ?>&service=<?= urlencode($fService) ?>" class="btn btn-secondary btn-sm no-print">
+          <i class="fa-solid fa-file-csv"></i> Export CSV
+        </a>
         <div class="topbar-user">
-          <div class="avatar">A</div>
-          <span class="user-name">Admin</span>
+          <div class="avatar"><?= $initial ?></div>
+          <span class="user-name"><?= $adminName ?></span>
         </div>
       </div>
     </header>
@@ -145,7 +137,7 @@ require_once __DIR__ . '/../../includes/header.php';
               <label class="form-label">Filter by Status</label>
               <select class="form-select" name="status" onchange="this.form.submit()" style="width:160px;">
                 <option value="">All Status</option>
-                <?php foreach (['Pending','Approved','Completed','Rejected','Cancelled'] as $s): ?>
+                <?php foreach (['Pending', 'Approved', 'Completed', 'Rejected', 'Cancelled'] as $s): ?>
                 <option<?= $fStatus === $s ? ' selected' : '' ?>><?= $s ?></option>
                 <?php endforeach; ?>
               </select>
@@ -211,34 +203,15 @@ require_once __DIR__ . '/../../includes/header.php';
     </div>
   </div>
 </div>
-        </div>
-      </div>
-
-      <!-- Charts -->
-      <div class="grid-2">
-        <div class="card">
-          <div class="card-header"><h5><i class="fa-solid fa-chart-bar"></i> By Service</h5></div>
-          <div class="card-body"><div class="chart-container"><canvas id="reportBarChart"></canvas></div></div>
-        </div>
-        <div class="card">
-          <div class="card-header"><h5><i class="fa-solid fa-chart-pie"></i> By Status</h5></div>
-          <div class="card-body"><div class="chart-container"><canvas id="reportPieChart"></canvas></div></div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
 
 <?php
 $extraScripts = <<<JS
 <script>
   document.getElementById("printDate").textContent = new Date().toLocaleDateString("en-PH", { year: "numeric", month: "long", day: "numeric" });
 
-  // Format date cells and status badges
   document.querySelectorAll(".fmt-date").forEach(el => { el.textContent = formatDate(el.textContent.trim()); });
   document.querySelectorAll(".status-badge-wrap").forEach(el => { el.innerHTML = statusBadge(el.dataset.status); });
 
-  // Bar chart – By Service
   new Chart(document.getElementById("reportBarChart"), {
     type: "bar",
     data: {
@@ -248,7 +221,6 @@ $extraScripts = <<<JS
     options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true }, x: { grid: { display: false } } } }
   });
 
-  // Pie chart – By Status
   new Chart(document.getElementById("reportPieChart"), {
     type: "pie",
     data: {

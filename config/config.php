@@ -28,3 +28,11 @@ define('SESSION_NAME', 'rhu_session');
 
 // ── Password hashing cost ───────────────────────────────────
 define('BCRYPT_COST', 10);
+
+// ── Gmail SMTP ──────────────────────────────────────────────
+define('MAIL_HOST',      'smtp.gmail.com');
+define('MAIL_PORT',      587);
+define('MAIL_USERNAME',  'rhurizalcagayan@gmail.com');
+define('MAIL_PASSWORD',  'frxh imov obxa jxfe');
+define('MAIL_FROM',      'rhurizalcagayan@gmail.com');
+define('MAIL_FROM_NAME', 'RHU Rizal Clinic');

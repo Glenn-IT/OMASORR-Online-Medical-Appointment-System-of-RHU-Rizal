@@ -5,10 +5,9 @@ require_once __DIR__ . '/../../config/auth.php';
 
 requireLogin('patient');
 $session   = getPatientSession();
-$patient   = $session['patient'];
-$fullName  = trim($patient['first_name'] . ' ' . $patient['last_name']);
+$fullName  = $session['full_name'];
 $initial   = strtoupper(mb_substr($fullName, 0, 1));
-$patientId = (int) $patient['id'];
+$patientId = (int) $session['id'];
 
 $pdo = db();
 
@@ -109,7 +108,7 @@ require_once __DIR__ . '/../../includes/header.php';
 
 <?php
 $histJson = json_encode(array_map(fn($a) => [
-    'id'          => $a['id'],
+    'id'          => (int) $a['id'],
     'appt_no'     => $a['appt_no'],
     'service'     => $a['service'],
     'doctor_name' => $a['doctor_name'] ?? 'TBA',
@@ -136,25 +135,25 @@ $extraScripts = <<<JS
 
   function viewHistory(id) {
     const a = HISTORY.find(x => x.id === id); if (!a) return;
-    document.getElementById('historyModalBody').innerHTML = \`
-      <div style="background:var(--primary-light);border-radius:10px;padding:16px;margin-bottom:18px;display:flex;gap:14px;align-items:center;">
-        <div style="font-size:40px;color:var(--primary)"><i class="fa-solid fa-file-waveform"></i></div>
-        <div>
-          <p style="font-size:15px;font-weight:700;color:var(--primary)">\${a.service}</p>
-          <p style="font-size:12px;color:#555">\${a.doctor_name} &middot; \${formatDate(a.date)}</p>
-          <div style="margin-top:6px">\${statusBadge(a.status)}</div>
-        </div>
-      </div>
-      <div class="detail-list">
-        <div class="detail-item"><div class="detail-label">Record ID</div><div class="detail-value fw-600 text-primary">\${a.appt_no}</div></div>
-        <div class="detail-item"><div class="detail-label">Service</div><div class="detail-value">\${a.service}</div></div>
-        <div class="detail-item"><div class="detail-label">Attending Doctor</div><div class="detail-value">\${a.doctor_name}</div></div>
-        <div class="detail-item"><div class="detail-label">Visit Date</div><div class="detail-value">\${formatDate(a.date)}</div></div>
-        <div class="detail-item"><div class="detail-label">Visit Time</div><div class="detail-value">\${formatTime(a.time)}</div></div>
-        <div class="detail-item"><div class="detail-label">Chief Complaint</div><div class="detail-value">\${a.reason}</div></div>
-        <div class="detail-item"><div class="detail-label">Status</div><div class="detail-value">\${statusBadge(a.status)}</div></div>
-      </div>
-      <div class="alert alert-info mt-2"><i class="fa-solid fa-circle-info"></i><div>This is a prototype record. In the actual system, clinical findings, diagnosis, and prescriptions will appear here.</div></div>\`;
+    document.getElementById('historyModalBody').innerHTML =
+      '<div style="background:var(--primary-light);border-radius:10px;padding:16px;margin-bottom:18px;display:flex;gap:14px;align-items:center;">' +
+        '<div style="font-size:40px;color:var(--primary)"><i class="fa-solid fa-file-waveform"></i></div>' +
+        '<div>' +
+          '<p style="font-size:15px;font-weight:700;color:var(--primary)">' + a.service + '</p>' +
+          '<p style="font-size:12px;color:#555">' + a.doctor_name + ' &middot; ' + formatDate(a.date) + '</p>' +
+          '<div style="margin-top:6px">' + statusBadge(a.status) + '</div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="detail-list">' +
+        '<div class="detail-item"><div class="detail-label">Record ID</div><div class="detail-value fw-600 text-primary">' + a.appt_no + '</div></div>' +
+        '<div class="detail-item"><div class="detail-label">Service</div><div class="detail-value">' + a.service + '</div></div>' +
+        '<div class="detail-item"><div class="detail-label">Attending Doctor</div><div class="detail-value">' + a.doctor_name + '</div></div>' +
+        '<div class="detail-item"><div class="detail-label">Visit Date</div><div class="detail-value">' + formatDate(a.date) + '</div></div>' +
+        '<div class="detail-item"><div class="detail-label">Visit Time</div><div class="detail-value">' + formatTime(a.time) + '</div></div>' +
+        '<div class="detail-item"><div class="detail-label">Chief Complaint</div><div class="detail-value">' + a.reason + '</div></div>' +
+        '<div class="detail-item"><div class="detail-label">Status</div><div class="detail-value">' + statusBadge(a.status) + '</div></div>' +
+      '</div>' +
+      '<div class="alert alert-info mt-2"><i class="fa-solid fa-circle-info"></i><div>This is a prototype record. In the actual system, clinical findings, diagnosis, and prescriptions will appear here.</div></div>';
     openModal('historyModal');
   }
 </script>
