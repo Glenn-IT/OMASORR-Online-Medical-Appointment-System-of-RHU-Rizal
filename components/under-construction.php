@@ -1,6 +1,9 @@
 <?php
 define('CURRENT_VERSION', 'v1.00');
+require_once __DIR__ . '/../config/config.php';
+require_once __DIR__ . '/../config/auth.php';
 $base = '/rhu-appointment-system';
+$_ucLoggedIn = isLoggedIn('patient') || isLoggedIn('admin');
 ?>
 <!doctype html>
 <html lang="en">
@@ -35,7 +38,13 @@ $base = '/rhu-appointment-system';
     <div class="uc-version">Current Version: <?= CURRENT_VERSION ?></div>
     <h1 class="uc-title">Under Construction</h1>
     <p class="uc-text">This page is not yet available in the current version.<br>It will be unlocked in a future release.</p>
+    <?php if ($_ucLoggedIn): ?>
+    <a href="<?= $base ?>/actions/logout.php" class="uc-back" style="background:#dc2626;" onmouseover="this.style.background='#b91c1c'" onmouseout="this.style.background='#dc2626'">
+      <i class="fas fa-right-from-bracket"></i> Logout
+    </a>
+    <?php else: ?>
     <a href="javascript:history.back()" class="uc-back"><i class="fas fa-arrow-left"></i> Go Back</a>
+    <?php endif; ?>
   </div>
 </body>
 </html>
