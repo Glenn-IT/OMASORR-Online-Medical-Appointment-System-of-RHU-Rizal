@@ -72,7 +72,7 @@ git tag | sort | xargs -I{} git log -1 --format="{} %H" {}
 
 | Version | Tag Name | Commit Hash |
 |---------|----------|-------------|
-| v1.00 | v1.00 | `73d3da076052f69bd26fd3464103f860484bc9be` (retagged: added case-sensitive login, lockout, OTP reset) |
+| v1.00 | v1.00 | `30e2d669a25979e5b714478e50e0c17ba2c582b6` (retagged: added case-sensitive login, lockout, OTP reset; removed demo credentials) |
 | v1.01 | v1.01 | `b79c5c4bd162be690b3d3a6fff964bf378470e39` |
 | v1.02 | v1.02 | `1a09ed4bebcf839ff75787b00b6cdbf9ffa50e20` |
 | v1.03 | v1.03 | `35a19c47843cbdbb77dece5404a38d711f24e050` |
