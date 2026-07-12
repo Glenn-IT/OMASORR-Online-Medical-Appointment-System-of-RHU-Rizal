@@ -214,6 +214,33 @@ function sendAppointmentStatusEmail(string $to, string $name, array $appt, strin
     }
 }
 
+// ── 4b. Password reset OTP ────────────────────────────────────
+
+function sendPasswordResetOtpEmail(string $to, string $name, string $code): void
+{
+    try {
+        $body = <<<HTML
+        <h2 style="margin:0 0 6px;font-size:20px;color:#1a6b3c;">Password Reset Code</h2>
+        <p style="margin:0 0 22px;font-size:14px;color:#6c757d;">Hi {$name}, use the code below to reset your password. This code expires in 10 minutes.</p>
+        <table cellpadding="0" cellspacing="0" style="width:100%;margin-bottom:24px;">
+          <tr><td align="center">
+            <span style="display:inline-block;padding:14px 28px;font-size:28px;font-weight:700;letter-spacing:6px;color:#1a6b3c;background:#f0f4f8;border-radius:8px;">{$code}</span>
+          </td></tr>
+        </table>
+        <p style="font-size:13px;color:#6c757d;margin:0;">If you did not request a password reset, you can safely ignore this email.</p>
+        HTML;
+
+        $mail = getMailer();
+        $mail->addAddress($to, $name);
+        $mail->Subject = 'Your RHU Rizal Password Reset Code';
+        $mail->Body    = emailLayout('Password Reset Code', $body);
+        $mail->AltBody = "Hi {$name}, your RHU Rizal password reset code is {$code}. It expires in 10 minutes.";
+        $mail->send();
+    } catch (Exception $e) {
+        error_log("RHU Mailer [password-reset-otp] to {$to}: " . $e->getMessage());
+    }
+}
+
 // ── 4. Patient self-cancellation confirmation ────────────────
 
 function sendCancellationEmail(string $to, string $name, array $appt): void

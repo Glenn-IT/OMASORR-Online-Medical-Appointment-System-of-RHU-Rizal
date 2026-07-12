@@ -13,6 +13,17 @@ if (isLoggedIn('admin')) {
 $flash        = getFlash('login_error');
 $flashSuccess = getFlash('signup_success');
 
+$lockout = $_SESSION['login_lockout'] ?? null;
+if ($lockout && $lockout['until'] <= time()) {
+    unset($_SESSION['login_lockout']);
+    $lockout = null;
+}
+
+$forgotNotice = getFlash('forgot_notice');
+$forgotError  = getFlash('forgot_error');
+$pwdReset     = $_SESSION['pwd_reset'] ?? null;
+$forgotStep   = ($pwdReset && $pwdReset['account_type'] === 'patient') ? $pwdReset['step'] : 'email';
+
 $pageTitle = 'Login – RHU Rizal Appointment System';
 require_once __DIR__ . '/includes/header.php';
 ?>
@@ -93,36 +104,135 @@ require_once __DIR__ . '/includes/header.php';
         <h5><i class="fa-solid fa-key"></i> Forgot Password</h5>
         <button class="modal-close" data-modal-close="forgotModal"><i class="fa-solid fa-xmark"></i></button>
       </div>
-      <div class="modal-body">
-        <p style="font-size:13.5px;color:#555;margin-bottom:16px">
-          Enter your registered email address and we'll send you a password reset link.
-        </p>
-        <div class="form-group">
-          <label class="form-label">Email Address</label>
-          <div class="input-group">
-            <i class="fa-solid fa-envelope input-icon"></i>
-            <input type="email" class="form-control" placeholder="your@email.com" />
+
+      <?php if ($forgotNotice): ?>
+      <div class="alert alert-<?= htmlspecialchars($forgotNotice['type']) ?> mb-2" role="alert" style="margin:16px 20px 0">
+        <div><?= htmlspecialchars($forgotNotice['message']) ?></div>
+      </div>
+      <?php endif; ?>
+      <?php if ($forgotError): ?>
+      <div class="alert alert-<?= htmlspecialchars($forgotError['type']) ?> mb-2" role="alert" style="margin:16px 20px 0">
+        <div><?= htmlspecialchars($forgotError['message']) ?></div>
+      </div>
+      <?php endif; ?>
+
+      <?php if ($forgotStep === 'email'): ?>
+      <form method="post" action="<?= BASE_URL ?>/actions/forgot-password/request.php">
+        <?= csrfField() ?>
+        <input type="hidden" name="account_type" value="patient" />
+        <div class="modal-body">
+          <p style="font-size:13.5px;color:#555;margin-bottom:16px">
+            Enter your registered email address and we'll send you a 6-digit code.
+          </p>
+          <div class="form-group">
+            <label class="form-label">Email Address</label>
+            <div class="input-group">
+              <i class="fa-solid fa-envelope input-icon"></i>
+              <input type="email" class="form-control" name="email" placeholder="your@email.com" required />
+            </div>
           </div>
         </div>
-      </div>
-      <div class="modal-footer">
-        <button class="btn btn-secondary" data-modal-close="forgotModal">Cancel</button>
-        <button class="btn btn-primary" onclick="showToast('Password reset link sent! (Prototype – UI only)','info');closeModal('forgotModal');">
-          <i class="fa-solid fa-paper-plane"></i> Send Reset Link
-        </button>
-      </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-modal-close="forgotModal">Cancel</button>
+          <button type="submit" class="btn btn-primary">
+            <i class="fa-solid fa-paper-plane"></i> Send Code
+          </button>
+        </div>
+      </form>
+
+      <?php elseif ($forgotStep === 'otp'): ?>
+      <form method="post" action="<?= BASE_URL ?>/actions/forgot-password/verify.php">
+        <?= csrfField() ?>
+        <div class="modal-body">
+          <p style="font-size:13.5px;color:#555;margin-bottom:16px">
+            Enter the 6-digit code we sent to your email. It expires in 10 minutes.
+          </p>
+          <div class="form-group">
+            <label class="form-label">6-Digit Code</label>
+            <div class="input-group">
+              <i class="fa-solid fa-key input-icon"></i>
+              <input type="text" class="form-control" name="otp" inputmode="numeric" pattern="\d{6}" maxlength="6" placeholder="000000" required />
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-modal-close="forgotModal">Cancel</button>
+          <button type="submit" class="btn btn-primary">
+            <i class="fa-solid fa-check"></i> Verify Code
+          </button>
+        </div>
+      </form>
+
+      <?php else: ?>
+      <form method="post" action="<?= BASE_URL ?>/actions/forgot-password/reset.php">
+        <?= csrfField() ?>
+        <div class="modal-body">
+          <p style="font-size:13.5px;color:#555;margin-bottom:16px">
+            Choose a new password for your account.
+          </p>
+          <div class="form-group">
+            <label class="form-label">New Password</label>
+            <div class="input-group">
+              <i class="fa-solid fa-lock input-icon"></i>
+              <input type="password" class="form-control" name="new_password" placeholder="At least 8 characters" required minlength="8" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Confirm Password</label>
+            <div class="input-group">
+              <i class="fa-solid fa-lock input-icon"></i>
+              <input type="password" class="form-control" name="confirm_password" placeholder="Re-enter password" required minlength="8" />
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-modal-close="forgotModal">Cancel</button>
+          <button type="submit" class="btn btn-primary">
+            <i class="fa-solid fa-rotate"></i> Reset Password
+          </button>
+        </div>
+      </form>
+      <?php endif; ?>
     </div>
   </div>
 
 <?php
-$extraScripts = <<<'JS'
+$lockoutUntil = $lockout['until'] ?? 0;
+$reopenForgot = ($forgotStep !== 'email' || $forgotNotice || $forgotError) ? 'true' : 'false';
+$extraScripts = <<<JS
 <script>
+  if ({$reopenForgot}) { document.addEventListener('DOMContentLoaded', () => openModal('forgotModal')); }
+
   document.getElementById('togglePwd')?.addEventListener('click', () => {
     const pwd  = document.getElementById('password');
     const icon = document.getElementById('togglePwd');
     if (pwd.type === 'password') { pwd.type = 'text';     icon.classList.replace('fa-eye','fa-eye-slash'); }
     else                         { pwd.type = 'password'; icon.classList.replace('fa-eye-slash','fa-eye'); }
   });
+
+  (function () {
+    const lockUntil = {$lockoutUntil} * 1000;
+    if (!lockUntil || lockUntil <= Date.now()) return;
+
+    const btn  = document.getElementById('loginBtn');
+    const user = document.getElementById('username');
+    const pass = document.getElementById('password');
+    const label = btn.innerHTML;
+
+    function tick() {
+      const remaining = Math.ceil((lockUntil - Date.now()) / 1000);
+      if (remaining <= 0) {
+        btn.disabled = false; user.disabled = false; pass.disabled = false;
+        btn.innerHTML = label;
+        clearInterval(timer);
+        return;
+      }
+      btn.disabled = true; user.disabled = true; pass.disabled = true;
+      btn.innerHTML = 'Try again in ' + remaining + 's';
+    }
+    const timer = setInterval(tick, 250);
+    tick();
+  })();
 </script>
 JS;
 require_once __DIR__ . '/includes/footer.php';

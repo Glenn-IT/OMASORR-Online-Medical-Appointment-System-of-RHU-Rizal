@@ -40,12 +40,14 @@ CREATE TABLE IF NOT EXISTS doctors (
 -- Login credentials for patient accounts.
 -- ============================================================
 CREATE TABLE IF NOT EXISTS users (
-  id          INT AUTO_INCREMENT PRIMARY KEY,
-  username    VARCHAR(50) NOT NULL UNIQUE,
-  password    VARCHAR(255) NOT NULL,      -- bcrypt hash (password_hash)
-  role        ENUM('patient') NOT NULL DEFAULT 'patient',
-  status      ENUM('Active','Inactive') NOT NULL DEFAULT 'Active',
-  created_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+  id              INT AUTO_INCREMENT PRIMARY KEY,
+  username        VARCHAR(50) NOT NULL UNIQUE,
+  password        VARCHAR(255) NOT NULL,      -- bcrypt hash (password_hash)
+  role            ENUM('patient') NOT NULL DEFAULT 'patient',
+  status          ENUM('Active','Inactive') NOT NULL DEFAULT 'Active',
+  failed_attempts INT NOT NULL DEFAULT 0,
+  locked_until    DATETIME NULL,
+  created_at      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
 
 -- ============================================================
@@ -112,15 +114,32 @@ CREATE TABLE IF NOT EXISTS appointment_logs (
 -- Admin login accounts (separate from patient users).
 -- ============================================================
 CREATE TABLE IF NOT EXISTS admin_users (
-  id          INT AUTO_INCREMENT PRIMARY KEY,
-  username    VARCHAR(50) NOT NULL UNIQUE,
-  password    VARCHAR(255) NOT NULL,       -- bcrypt hash
-  full_name   VARCHAR(100),
-  email       VARCHAR(100),
-  phone       VARCHAR(20),
-  role        VARCHAR(50) NOT NULL DEFAULT 'System Administrator',
-  status      ENUM('Active','Inactive') NOT NULL DEFAULT 'Active',
-  created_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+  id              INT AUTO_INCREMENT PRIMARY KEY,
+  username        VARCHAR(50) NOT NULL UNIQUE,
+  password        VARCHAR(255) NOT NULL,       -- bcrypt hash
+  full_name       VARCHAR(100),
+  email           VARCHAR(100),
+  phone           VARCHAR(20),
+  role            VARCHAR(50) NOT NULL DEFAULT 'System Administrator',
+  status          ENUM('Active','Inactive') NOT NULL DEFAULT 'Active',
+  failed_attempts INT NOT NULL DEFAULT 0,
+  locked_until    DATETIME NULL,
+  created_at      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB;
+
+-- ============================================================
+-- TABLE: password_resets
+-- OTP-based password reset requests for patients and admins.
+-- ============================================================
+CREATE TABLE IF NOT EXISTS password_resets (
+  id           INT AUTO_INCREMENT PRIMARY KEY,
+  account_type ENUM('patient','admin') NOT NULL,
+  account_id   INT NOT NULL,           -- users.id or admin_users.id depending on account_type
+  otp_hash     VARCHAR(255) NOT NULL,  -- password_hash() of the 6-digit code
+  attempts     INT NOT NULL DEFAULT 0,
+  expires_at   DATETIME NOT NULL,
+  verified_at  DATETIME NULL,
+  created_at   DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
 
 -- ============================================================
