@@ -20,19 +20,45 @@ try {
     $pdo = db();
     $stmt = $pdo->prepare("
         SELECT u.id AS user_id, u.username, u.password AS password_hash, u.status,
+               u.failed_attempts, u.locked_until,
                p.id AS patient_id, p.patient_no, p.full_name, p.birthdate, p.gender, p.phone
         FROM users u
         JOIN patients p ON p.user_id = u.id
-        WHERE u.username = ?
+        WHERE BINARY u.username = ?
         LIMIT 1
     ");
     $stmt->execute([$username]);
     $row = $stmt->fetch();
 
-    if (!$row || !password_verify($password, $row['password_hash'])) {
-        flashMessage('login_error', 'Invalid username or password.', 'danger');
+    if ($row && $row['locked_until'] && strtotime($row['locked_until']) > time()) {
+        $_SESSION['login_lockout'] = ['until' => strtotime($row['locked_until'])];
+        flashMessage('login_error', 'Account locked. Please wait 30 seconds before trying again.', 'danger');
         redirectTo('/index.php');
     }
+
+    if (!$row || !password_verify($password, $row['password_hash'])) {
+        if ($row) {
+            $attempts = (int) $row['failed_attempts'] + 1;
+            if ($attempts >= 3) {
+                $pdo->prepare("UPDATE users SET failed_attempts = 0, locked_until = DATE_ADD(NOW(), INTERVAL 30 SECOND) WHERE id = ?")
+                    ->execute([$row['user_id']]);
+                $_SESSION['login_lockout'] = ['until' => time() + 30];
+                flashMessage('login_error', 'Account locked due to too many failed attempts. Please wait 30 seconds before trying again.', 'danger');
+            } else {
+                $pdo->prepare("UPDATE users SET failed_attempts = ? WHERE id = ?")
+                    ->execute([$attempts, $row['user_id']]);
+                $remaining = 3 - $attempts;
+                flashMessage('login_error', "Invalid username or password. {$remaining} attempt(s) left before your account is locked.", 'danger');
+            }
+        } else {
+            flashMessage('login_error', 'Invalid username or password.', 'danger');
+        }
+        redirectTo('/index.php');
+    }
+
+    $pdo->prepare("UPDATE users SET failed_attempts = 0, locked_until = NULL WHERE id = ?")
+        ->execute([$row['user_id']]);
+    unset($_SESSION['login_lockout']);
 
     if ($row['status'] !== 'Active') {
         flashMessage('login_error', 'Your account is inactive. Please contact the clinic.', 'warning');
