@@ -155,6 +155,7 @@ git tag | sort | xargs -I{} git log -1 --format="{} %H" {}
 
 ## Quick Reference: When Prof Requests Changes After a Presentation
 
+
 ```bash
 # Fix on main first
 git checkout main
