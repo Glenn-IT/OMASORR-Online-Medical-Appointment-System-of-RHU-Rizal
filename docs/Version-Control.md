@@ -18,6 +18,7 @@
 | v1.11 | User: My Appointments | `views/user/my-appointments.php` | 2 pages |
 | v1.12 | User: Medical History | `views/user/medical-history.php` | 1 page |
 | v1.13 | User: Patient Profile (Full System) | `views/user/profile.php` | None |
+| v2.00 | Presentation Reset — Login/Register + Admin Dashboard + Patient Dashboard | `index.php`, `views/user/signup.php`, `views/admin/login.php`, `views/admin/dashboard.php`, `views/user/dashboard.php` | 11 pages (`appointments.php`, `calendar.php`, `doctors.php`, `patients.php`, `users.php`, `reports.php`, `admin/profile.php`, `book-appointment.php`, `my-appointments.php`, `medical-history.php`, `user/profile.php`) |
 
 ---
 
@@ -86,6 +87,11 @@ git tag | sort | xargs -I{} git log -1 --format="{} %H" {}
 | v1.11 | v1.11 | `5018adf0b001779c1b54d5919eda855b56d20c28` |
 | v1.12 | v1.12 | `3343ff451bb8639b33ca8a20093854b1327cca1b` |
 | v1.13 | v1.13 | `139faaabac04ac7b40bc577d08a938f86836ff63` |
+| v2.00 | v2.00 | *(fill after tagging)* |
+
+---
+
+**Note on v2.00:** Unlike v1.00–v1.13 (one incremental unlock per version), v2.00 is a presentation-reset snapshot: it carries all v1.00 content (login/signup, case-sensitive auth, 3-attempt lockout, OTP password reset) plus the Admin Dashboard and Patient Dashboard unlocked, with every other page re-gated behind `components/under-construction.php`.
 
 ---
 

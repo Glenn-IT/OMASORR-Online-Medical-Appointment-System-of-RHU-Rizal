@@ -1,5 +1,5 @@
 <?php
-define('CURRENT_VERSION', 'v1.13');
+define('CURRENT_VERSION', 'v2.00');
 require_once __DIR__ . '/../config/config.php';
 require_once __DIR__ . '/../config/auth.php';
 $base = '/rhu-appointment-system';
