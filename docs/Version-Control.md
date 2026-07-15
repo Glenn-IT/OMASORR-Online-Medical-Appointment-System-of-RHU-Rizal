@@ -19,6 +19,7 @@
 | v1.12 | User: Medical History | `views/user/medical-history.php` | 1 page |
 | v1.13 | User: Patient Profile (Full System) | `views/user/profile.php` | None |
 | v2.00 | Presentation Reset — Login/Register + Admin Dashboard + Patient Dashboard | `index.php`, `views/user/signup.php`, `views/admin/login.php`, `views/admin/dashboard.php`, `views/user/dashboard.php` | 11 pages (`appointments.php`, `calendar.php`, `doctors.php`, `patients.php`, `users.php`, `reports.php`, `admin/profile.php`, `book-appointment.php`, `my-appointments.php`, `medical-history.php`, `user/profile.php`) |
+| v2.01 | Full System Unlock — all remaining pages | All 11 previously gated pages (`appointments.php`, `calendar.php`, `doctors.php`, `patients.php`, `users.php`, `reports.php`, `admin/profile.php`, `book-appointment.php`, `my-appointments.php`, `medical-history.php`, `user/profile.php`) | None |
 
 ---
 
