@@ -91,7 +91,7 @@ git tag | sort | xargs -I{} git log -1 --format="{} %H" {}
 | v1.12 | v1.12 | `3343ff451bb8639b33ca8a20093854b1327cca1b` |
 | v1.13 | v1.13 | `139faaabac04ac7b40bc577d08a938f86836ff63` |
 | v2.00 | v2.00 | `a241599f31db55027aabbb542a3ef46d2fdc4a18` |
-| v3.00 | v3.00 | `8a8a6c792243ac344e5cd5a8ec78b481568e9b5d` |
+| v3.00 | v3.00 | `ff4eb19d734bea3d536aa4ed2b3e995879d85054` (retagged: added 11-digit PH phone number validation on Admin/Patient profile) |
 | v3.01 | v3.01 | `cdc5ec7` |
 
 ---
@@ -100,7 +100,7 @@ git tag | sort | xargs -I{} git log -1 --format="{} %H" {}
 
 ---
 
-**Note on v3.00:** Built on the v2.00 base (login/signup, dashboards unlocked, everything else re-gated), with `views/admin/profile.php` and `views/user/profile.php` additionally unlocked so both the admin and patient Profile tabs are viewable.
+**Note on v3.00:** Built on the v2.00 base (login/signup, dashboards unlocked, everything else re-gated), with `views/admin/profile.php` and `views/user/profile.php` additionally unlocked so both the admin and patient Profile tabs are viewable. Retagged afterward to include the 11-digit PH phone number validation fix on both profile forms.
 
 ---
 
