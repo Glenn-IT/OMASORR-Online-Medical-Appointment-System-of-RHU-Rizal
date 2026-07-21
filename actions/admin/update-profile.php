@@ -18,6 +18,7 @@ $phone    = trim($_POST['phone']     ?? '');
 $errors = [];
 if (!$fullName)                                     $errors[] = 'Full name is required.';
 if ($email && !filter_var($email, FILTER_VALIDATE_EMAIL)) $errors[] = 'Please enter a valid email address.';
+if ($phone && !preg_match('/^09\d{9}$/', $phone)) $errors[] = 'Phone number must be an 11-digit PH mobile number starting with 09.';
 
 if ($errors) {
     flashMessage('profile_error', implode(' ', $errors), 'danger');

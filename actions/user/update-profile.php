@@ -20,6 +20,7 @@ $bloodType = trim($_POST['blood_type'] ?? '');
 $errors = [];
 if (!$fullName)  $errors[] = 'Full name is required.';
 if (!$phone)     $errors[] = 'Phone number is required.';
+elseif (!preg_match('/^09\d{9}$/', $phone)) $errors[] = 'Phone number must be an 11-digit PH mobile number starting with 09.';
 if (!$address)   $errors[] = 'Address is required.';
 if ($email && !filter_var($email, FILTER_VALIDATE_EMAIL)) $errors[] = 'Please enter a valid email address.';
 

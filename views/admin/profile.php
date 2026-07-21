@@ -130,7 +130,7 @@ require_once __DIR__ . '/../../includes/header.php';
           </div>
           <div class="form-group">
             <label class="form-label">Phone</label>
-            <input type="tel" class="form-control" name="phone" value="<?= $phone ?>" placeholder="+63 9XX XXX XXXX" />
+            <input type="tel" class="form-control" name="phone" value="<?= $phone ?>" placeholder="09XXXXXXXXX" inputmode="numeric" maxlength="11" pattern="09[0-9]{9}" title="Enter an 11-digit PH mobile number starting with 09" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,11)" />
           </div>
           <div class="modal-footer">
             <button class="btn btn-secondary" type="button" data-modal-close="editProfileModal">Cancel</button>

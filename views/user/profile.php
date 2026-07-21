@@ -122,7 +122,7 @@ require_once __DIR__ . '/../../includes/header.php';
             <div class="form-group"><label class="form-label">Email</label><input type="email" class="form-control" name="email" value="<?= $email ?>" /></div>
           </div>
           <div class="form-row">
-            <div class="form-group"><label class="form-label">Phone</label><input type="tel" class="form-control" name="phone" value="<?= $phone ?>" /></div>
+            <div class="form-group"><label class="form-label">Phone</label><input type="tel" class="form-control" name="phone" value="<?= $phone ?>" placeholder="09XXXXXXXXX" inputmode="numeric" maxlength="11" pattern="09[0-9]{9}" title="Enter an 11-digit PH mobile number starting with 09" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,11)" required /></div>
             <div class="form-group">
               <label class="form-label">Blood Type</label>
               <select class="form-select" name="blood_type">
