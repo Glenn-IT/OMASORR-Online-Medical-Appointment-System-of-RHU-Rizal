@@ -21,6 +21,7 @@
 | v2.00 | Presentation Reset — Login/Register + Admin Dashboard + Patient Dashboard | `index.php`, `views/user/signup.php`, `views/admin/login.php`, `views/admin/dashboard.php`, `views/user/dashboard.php` | 11 pages (`appointments.php`, `calendar.php`, `doctors.php`, `patients.php`, `users.php`, `reports.php`, `admin/profile.php`, `book-appointment.php`, `my-appointments.php`, `medical-history.php`, `user/profile.php`) |
 | v2.01 | Full System Unlock — all remaining pages | All 11 previously gated pages (`appointments.php`, `calendar.php`, `doctors.php`, `patients.php`, `users.php`, `reports.php`, `admin/profile.php`, `book-appointment.php`, `my-appointments.php`, `medical-history.php`, `user/profile.php`) | None |
 | v3.00 | Presentation Reset (v2.00 base) + Profile Unlocked for Both Roles | `index.php`, `views/user/signup.php`, `views/admin/login.php`, `views/admin/dashboard.php`, `views/user/dashboard.php`, `views/admin/profile.php`, `views/user/profile.php` | 9 pages (`appointments.php`, `calendar.php`, `doctors.php`, `patients.php`, `users.php`, `reports.php`, `book-appointment.php`, `my-appointments.php`, `medical-history.php`) |
+| v3.01 | Full System Unlock — all remaining pages | All 9 previously gated pages (`appointments.php`, `calendar.php`, `doctors.php`, `patients.php`, `users.php`, `reports.php`, `book-appointment.php`, `my-appointments.php`, `medical-history.php`) | None |
 
 ---
 
@@ -91,6 +92,11 @@ git tag | sort | xargs -I{} git log -1 --format="{} %H" {}
 | v1.13 | v1.13 | `139faaabac04ac7b40bc577d08a938f86836ff63` |
 | v2.00 | v2.00 | `a241599f31db55027aabbb542a3ef46d2fdc4a18` |
 | v3.00 | v3.00 | `8a8a6c792243ac344e5cd5a8ec78b481568e9b5d` |
+| v3.01 | v3.01 | *(pending — fill in after commit)* |
+
+---
+
+**Note on v3.01:** All pages unlocked (full system), same as the v2.00 → v2.01 pattern.
 
 ---
 
