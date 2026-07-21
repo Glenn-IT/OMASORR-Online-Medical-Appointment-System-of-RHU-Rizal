@@ -90,7 +90,7 @@ git tag | sort | xargs -I{} git log -1 --format="{} %H" {}
 | v1.12 | v1.12 | `3343ff451bb8639b33ca8a20093854b1327cca1b` |
 | v1.13 | v1.13 | `139faaabac04ac7b40bc577d08a938f86836ff63` |
 | v2.00 | v2.00 | `a241599f31db55027aabbb542a3ef46d2fdc4a18` |
-| v3.00 | v3.00 | *(pending — fill in after commit)* |
+| v3.00 | v3.00 | `8a8a6c792243ac344e5cd5a8ec78b481568e9b5d` |
 
 ---
 
