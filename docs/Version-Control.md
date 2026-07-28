@@ -94,7 +94,7 @@ git tag | sort | xargs -I{} git log -1 --format="{} %H" {}
 | v2.00 | v2.00 | `a241599f31db55027aabbb542a3ef46d2fdc4a18` |
 | v3.00 | v3.00 | `ff4eb19d734bea3d536aa4ed2b3e995879d85054` (retagged: added 11-digit PH phone number validation on Admin/Patient profile) |
 | v3.01 | v3.01 | `cdc5ec7` |
-| v4.00 | v4.00 | _pending — fill after tagging_ |
+| v4.00 | v4.00 | `146d4d9cc04739097c553644fc576a62f9e694f6` |
 
 ---
 
