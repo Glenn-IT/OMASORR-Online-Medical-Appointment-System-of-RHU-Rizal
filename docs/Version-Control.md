@@ -22,6 +22,7 @@
 | v2.01 | Full System Unlock — all remaining pages | All 11 previously gated pages (`appointments.php`, `calendar.php`, `doctors.php`, `patients.php`, `users.php`, `reports.php`, `admin/profile.php`, `book-appointment.php`, `my-appointments.php`, `medical-history.php`, `user/profile.php`) | None |
 | v3.00 | Presentation Reset (v2.00 base) + Profile Unlocked for Both Roles | `index.php`, `views/user/signup.php`, `views/admin/login.php`, `views/admin/dashboard.php`, `views/user/dashboard.php`, `views/admin/profile.php`, `views/user/profile.php` | 9 pages (`appointments.php`, `calendar.php`, `doctors.php`, `patients.php`, `users.php`, `reports.php`, `book-appointment.php`, `my-appointments.php`, `medical-history.php`) |
 | v3.01 | Full System Unlock — all remaining pages | All 9 previously gated pages (`appointments.php`, `calendar.php`, `doctors.php`, `patients.php`, `users.php`, `reports.php`, `book-appointment.php`, `my-appointments.php`, `medical-history.php`) | None |
+| v4.00 | Presentation Reset (v3.00 base) + Manage Appointments, Patient Record, Book Appointment Unlocked | `index.php`, `views/user/signup.php`, `views/admin/login.php`, `views/admin/dashboard.php`, `views/user/dashboard.php`, `views/admin/profile.php`, `views/user/profile.php`, `views/admin/appointments.php`, `views/admin/patients.php`, `views/user/book-appointment.php` | 6 pages (`calendar.php`, `doctors.php`, `users.php`, `reports.php`, `my-appointments.php`, `medical-history.php`) |
 
 ---
 
@@ -93,6 +94,11 @@ git tag | sort | xargs -I{} git log -1 --format="{} %H" {}
 | v2.00 | v2.00 | `a241599f31db55027aabbb542a3ef46d2fdc4a18` |
 | v3.00 | v3.00 | `ff4eb19d734bea3d536aa4ed2b3e995879d85054` (retagged: added 11-digit PH phone number validation on Admin/Patient profile) |
 | v3.01 | v3.01 | `cdc5ec7` |
+| v4.00 | v4.00 | _pending — fill after tagging_ |
+
+---
+
+**Note on v4.00:** Built on the v3.00 base (login/signup, dashboards, admin/patient profile unlocked, everything else re-gated), with `views/admin/appointments.php` (Manage Appointments), `views/admin/patients.php` (Patient Record), and `views/user/book-appointment.php` (Book Appointment) additionally unlocked.
 
 ---
 
