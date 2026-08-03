@@ -24,6 +24,7 @@
 | v3.01 | Full System Unlock — all remaining pages | All 9 previously gated pages (`appointments.php`, `calendar.php`, `doctors.php`, `patients.php`, `users.php`, `reports.php`, `book-appointment.php`, `my-appointments.php`, `medical-history.php`) | None |
 | v4.00 | Presentation Reset (v3.00 base) + Manage Appointments, Patient Record, Book Appointment Unlocked | `index.php`, `views/user/signup.php`, `views/admin/login.php`, `views/admin/dashboard.php`, `views/user/dashboard.php`, `views/admin/profile.php`, `views/user/profile.php`, `views/admin/appointments.php`, `views/admin/patients.php`, `views/user/book-appointment.php` | 6 pages (`calendar.php`, `doctors.php`, `users.php`, `reports.php`, `my-appointments.php`, `medical-history.php`) |
 | v5.00 | v4.00 base + Admin: View Calendar, Doctor Schedule Unlocked | `index.php`, `views/user/signup.php`, `views/admin/login.php`, `views/admin/dashboard.php`, `views/user/dashboard.php`, `views/admin/profile.php`, `views/user/profile.php`, `views/admin/appointments.php`, `views/admin/patients.php`, `views/user/book-appointment.php`, `views/admin/calendar.php`, `views/admin/doctors.php` | 4 pages (`users.php`, `reports.php`, `my-appointments.php`, `medical-history.php`) |
+| v5.01 | Full System Unlock — all remaining pages | All 4 previously gated pages (`users.php`, `reports.php`, `my-appointments.php`, `medical-history.php`) | None |
 
 ---
 
@@ -97,10 +98,15 @@ git tag | sort | xargs -I{} git log -1 --format="{} %H" {}
 | v3.01 | v3.01 | `cdc5ec7` |
 | v4.00 | v4.00 | `146d4d9cc04739097c553644fc576a62f9e694f6` |
 | v5.00 | v5.00 | `5606c782843e290454324376af1e93aa5bb753b0` |
+| v5.01 | v5.01 | *(fill in after commit)* |
 
 ---
 
 **Note on v4.00:** Built on the v3.00 base (login/signup, dashboards, admin/patient profile unlocked, everything else re-gated), with `views/admin/appointments.php` (Manage Appointments), `views/admin/patients.php` (Patient Record), and `views/user/book-appointment.php` (Book Appointment) additionally unlocked.
+
+---
+
+**Note on v5.01:** All pages unlocked (full system), same as the v2.00 → v2.01 and v3.00 → v3.01 pattern.
 
 ---
 
