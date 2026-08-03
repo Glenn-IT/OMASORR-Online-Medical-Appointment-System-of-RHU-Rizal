@@ -96,11 +96,15 @@ git tag | sort | xargs -I{} git log -1 --format="{} %H" {}
 | v3.00 | v3.00 | `ff4eb19d734bea3d536aa4ed2b3e995879d85054` (retagged: added 11-digit PH phone number validation on Admin/Patient profile) |
 | v3.01 | v3.01 | `cdc5ec7` |
 | v4.00 | v4.00 | `146d4d9cc04739097c553644fc576a62f9e694f6` |
-| v5.00 | v5.00 | *(fill in after commit)* |
+| v5.00 | v5.00 | `5606c782843e290454324376af1e93aa5bb753b0` |
 
 ---
 
 **Note on v4.00:** Built on the v3.00 base (login/signup, dashboards, admin/patient profile unlocked, everything else re-gated), with `views/admin/appointments.php` (Manage Appointments), `views/admin/patients.php` (Patient Record), and `views/user/book-appointment.php` (Book Appointment) additionally unlocked.
+
+---
+
+**Note on v5.00:** Built on the v4.00 base, with `views/admin/calendar.php` (View Calendar) and `views/admin/doctors.php` (Doctor Schedule) additionally unlocked.
 
 ---
 
