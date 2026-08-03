@@ -1,1 +1,1 @@
-Can we add new tag/version - v2.00 - the contents are the v1.00 content and admin dashboard and patient dashboard the rest is gated underconstruction can we do that
+Remove the Gate on View calendar and Doctor Schedule on the admin
