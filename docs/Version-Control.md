@@ -98,7 +98,7 @@ git tag | sort | xargs -I{} git log -1 --format="{} %H" {}
 | v3.01 | v3.01 | `cdc5ec7` |
 | v4.00 | v4.00 | `146d4d9cc04739097c553644fc576a62f9e694f6` |
 | v5.00 | v5.00 | `5606c782843e290454324376af1e93aa5bb753b0` |
-| v5.01 | v5.01 | *(fill in after commit)* |
+| v5.01 | v5.01 | `83ba2254e897f98811f8a0a8e063d63558518751` |
 
 ---
 
