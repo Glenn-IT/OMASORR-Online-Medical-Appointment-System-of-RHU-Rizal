@@ -25,6 +25,7 @@
 | v4.00 | Presentation Reset (v3.00 base) + Manage Appointments, Patient Record, Book Appointment Unlocked | `index.php`, `views/user/signup.php`, `views/admin/login.php`, `views/admin/dashboard.php`, `views/user/dashboard.php`, `views/admin/profile.php`, `views/user/profile.php`, `views/admin/appointments.php`, `views/admin/patients.php`, `views/user/book-appointment.php` | 6 pages (`calendar.php`, `doctors.php`, `users.php`, `reports.php`, `my-appointments.php`, `medical-history.php`) |
 | v5.00 | v4.00 base + Admin: View Calendar, Doctor Schedule Unlocked | `index.php`, `views/user/signup.php`, `views/admin/login.php`, `views/admin/dashboard.php`, `views/user/dashboard.php`, `views/admin/profile.php`, `views/user/profile.php`, `views/admin/appointments.php`, `views/admin/patients.php`, `views/user/book-appointment.php`, `views/admin/calendar.php`, `views/admin/doctors.php` | 4 pages (`users.php`, `reports.php`, `my-appointments.php`, `medical-history.php`) |
 | v5.01 | Full System Unlock — all remaining pages | All 4 previously gated pages (`users.php`, `reports.php`, `my-appointments.php`, `medical-history.php`) | None |
+| v6.00 | v5.00 base + Admin: Manage Users, Reports Unlocked | `index.php`, `views/user/signup.php`, `views/admin/login.php`, `views/admin/dashboard.php`, `views/user/dashboard.php`, `views/admin/profile.php`, `views/user/profile.php`, `views/admin/appointments.php`, `views/admin/patients.php`, `views/user/book-appointment.php`, `views/admin/calendar.php`, `views/admin/doctors.php`, `views/admin/users.php`, `views/admin/reports.php` | 2 pages (`my-appointments.php`, `medical-history.php`) |
 
 ---
 
@@ -99,6 +100,11 @@ git tag | sort | xargs -I{} git log -1 --format="{} %H" {}
 | v4.00 | v4.00 | `146d4d9cc04739097c553644fc576a62f9e694f6` |
 | v5.00 | v5.00 | `5606c782843e290454324376af1e93aa5bb753b0` |
 | v5.01 | v5.01 | `83ba2254e897f98811f8a0a8e063d63558518751` |
+| v6.00 | v6.00 | *(fill in after commit)* |
+
+---
+
+**Note on v6.00:** Built on the v5.00 base, with `views/admin/users.php` (Manage Users) and `views/admin/reports.php` (Reports) additionally unlocked.
 
 ---
 
