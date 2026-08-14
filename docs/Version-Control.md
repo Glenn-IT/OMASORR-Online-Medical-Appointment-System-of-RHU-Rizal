@@ -26,6 +26,7 @@
 | v5.00 | v4.00 base + Admin: View Calendar, Doctor Schedule Unlocked | `index.php`, `views/user/signup.php`, `views/admin/login.php`, `views/admin/dashboard.php`, `views/user/dashboard.php`, `views/admin/profile.php`, `views/user/profile.php`, `views/admin/appointments.php`, `views/admin/patients.php`, `views/user/book-appointment.php`, `views/admin/calendar.php`, `views/admin/doctors.php` | 4 pages (`users.php`, `reports.php`, `my-appointments.php`, `medical-history.php`) |
 | v5.01 | Full System Unlock — all remaining pages | All 4 previously gated pages (`users.php`, `reports.php`, `my-appointments.php`, `medical-history.php`) | None |
 | v6.00 | v5.00 base + Admin: Manage Users, Reports Unlocked | `index.php`, `views/user/signup.php`, `views/admin/login.php`, `views/admin/dashboard.php`, `views/user/dashboard.php`, `views/admin/profile.php`, `views/user/profile.php`, `views/admin/appointments.php`, `views/admin/patients.php`, `views/user/book-appointment.php`, `views/admin/calendar.php`, `views/admin/doctors.php`, `views/admin/users.php`, `views/admin/reports.php` | 2 pages (`my-appointments.php`, `medical-history.php`) |
+| v6.10 | v6.00 base + Admin Navigation Refactor (Patient Records Removed & Redirected) | `index.php`, `views/user/signup.php`, `views/admin/login.php`, `views/admin/dashboard.php`, `views/user/dashboard.php`, `views/admin/profile.php`, `views/user/profile.php`, `views/admin/appointments.php`, `views/user/book-appointment.php`, `views/admin/calendar.php`, `views/admin/doctors.php`, `views/admin/users.php`, `views/admin/reports.php` | 2 pages (`my-appointments.php`, `medical-history.php`) |
 
 ---
 
@@ -101,6 +102,11 @@ git tag | sort | xargs -I{} git log -1 --format="{} %H" {}
 | v5.00 | v5.00 | `5606c782843e290454324376af1e93aa5bb753b0` |
 | v5.01 | v5.01 | `83ba2254e897f98811f8a0a8e063d63558518751` |
 | v6.00 | v6.00 | `0869998cd1a31e45f354932604b2f3523d9320ee` |
+| v6.10 | v6.10 | PENDING_COMMIT_HASH |
+
+---
+
+**Note on v6.10:** Built on the v6.00 base with updated admin navigation (Patient Records removed from sidebar & redirected to dashboard).
 
 ---
 
