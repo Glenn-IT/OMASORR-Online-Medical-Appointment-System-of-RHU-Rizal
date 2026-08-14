@@ -102,7 +102,7 @@ git tag | sort | xargs -I{} git log -1 --format="{} %H" {}
 | v5.00 | v5.00 | `5606c782843e290454324376af1e93aa5bb753b0` |
 | v5.01 | v5.01 | `83ba2254e897f98811f8a0a8e063d63558518751` |
 | v6.00 | v6.00 | `0869998cd1a31e45f354932604b2f3523d9320ee` |
-| v6.10 | v6.10 | PENDING_COMMIT_HASH |
+| v6.10 | v6.10 | `b86f0cac9b72b45d1c89c417fe335c6ecf92667b` |
 
 ---
 
