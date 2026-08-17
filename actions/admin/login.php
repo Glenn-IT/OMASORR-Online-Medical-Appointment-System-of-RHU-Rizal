@@ -22,7 +22,7 @@ try {
         SELECT id, username, password AS password_hash, full_name, email, role,
                failed_attempts, locked_until
         FROM admin_users
-        WHERE BINARY username = ? AND status = 'active'
+        WHERE BINARY username = ? AND status = 'Active'
         LIMIT 1
     ");
     $stmt->execute([$username]);

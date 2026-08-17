@@ -60,8 +60,8 @@ try {
     }
 
     // Generate appt_no
-    $cnt    = (int) $pdo->query("SELECT COUNT(*) FROM appointments")->fetchColumn();
-    $apptNo = 'APT-' . str_pad($cnt + 1, 3, '0', STR_PAD_LEFT);
+    $maxId  = (int) $pdo->query("SELECT COALESCE(MAX(id), 0) FROM appointments")->fetchColumn();
+    $apptNo = 'APT-' . str_pad($maxId + 1, 3, '0', STR_PAD_LEFT);
 
     // Insert
     $stmt = $pdo->prepare("

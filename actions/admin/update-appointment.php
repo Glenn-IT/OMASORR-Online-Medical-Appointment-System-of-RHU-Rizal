@@ -38,7 +38,7 @@ try {
                d.name AS doctor_name
         FROM appointments a
         JOIN patients p ON p.id = a.patient_id
-        JOIN doctors  d ON d.id = a.doctor_id
+        LEFT JOIN doctors d ON d.id = a.doctor_id
         WHERE a.id = ? LIMIT 1
     ");
     $stmt->execute([$apptId]);

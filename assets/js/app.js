@@ -267,6 +267,7 @@ function formatDate(dateStr) {
   if (!dateStr) return "—";
   const datePart = String(dateStr).split(/[T ]/)[0]; // strip time from DATETIME strings
   const d = new Date(datePart + "T00:00:00");
+  if (isNaN(d.getTime())) return dateStr;
   return d.toLocaleDateString("en-PH", {
     year: "numeric",
     month: "long",

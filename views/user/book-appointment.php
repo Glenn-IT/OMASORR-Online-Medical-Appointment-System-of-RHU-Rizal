@@ -161,7 +161,8 @@ $extraScripts = <<<'JS'
     const card      = document.getElementById('timeSlotsCard');
     const container = document.getElementById('timeSlots');
     const selectEl  = document.getElementById('aptTime');
-    const notice    = document.getElementById('timeNotice');
+    const doctorEl  = document.getElementById('doctorSelect');
+    const doctorId  = doctorEl ? doctorEl.value : '';
     const prevVal   = selectEl.value;
 
     card.style.display = 'block';
@@ -169,7 +170,7 @@ $extraScripts = <<<'JS'
 
     let bookedTimes = [];
     try {
-      const res  = await fetch(`${BASE}/actions/api/get-booked-dates.php?date=${date}`);
+      const res  = await fetch(`${BASE}/actions/api/get-booked-dates.php?date=${date}&doctor_id=${doctorId}`);
       const data = await res.json();
       bookedTimes = data.booked_times || [];
     } catch(e) {}
