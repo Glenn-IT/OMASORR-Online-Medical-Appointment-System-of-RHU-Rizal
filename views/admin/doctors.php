@@ -16,8 +16,8 @@ $totalDoctors     = count($doctors);
 $availableDoctors = count(array_filter($doctors, fn($d) => $d['available']));
 
 // Flash
-[$successMsg, $successType] = getFlash('doctor_success');
-[$errorMsg,   $errorType]   = getFlash('doctor_error');
+$flashSuccess = getFlash('doctor_success');
+$flashError   = getFlash('doctor_error');
 
 $pageTitle = 'Doctor Schedule – RHU Rizal Admin';
 require_once __DIR__ . '/../../includes/header.php';
@@ -48,15 +48,15 @@ require_once __DIR__ . '/../../includes/header.php';
     </header>
 
     <div class="page-content">
-      <?php if ($successMsg): ?>
-      <div class="alert alert-<?= $successType ?> alert-dismissible mb-3">
-        <i class="fa-solid fa-circle-check"></i> <?= htmlspecialchars($successMsg) ?>
+      <?php if ($flashSuccess): ?>
+      <div class="alert alert-<?= htmlspecialchars($flashSuccess['type']) ?> alert-dismissible mb-3">
+        <i class="fa-solid fa-circle-check"></i> <?= htmlspecialchars($flashSuccess['message']) ?>
         <button class="alert-close" onclick="this.parentElement.remove()"><i class="fa-solid fa-xmark"></i></button>
       </div>
       <?php endif; ?>
-      <?php if ($errorMsg): ?>
-      <div class="alert alert-<?= $errorType ?> alert-dismissible mb-3">
-        <i class="fa-solid fa-circle-exclamation"></i> <?= htmlspecialchars($errorMsg) ?>
+      <?php if ($flashError): ?>
+      <div class="alert alert-<?= htmlspecialchars($flashError['type']) ?> alert-dismissible mb-3">
+        <i class="fa-solid fa-circle-exclamation"></i> <?= htmlspecialchars($flashError['message']) ?>
         <button class="alert-close" onclick="this.parentElement.remove()"><i class="fa-solid fa-xmark"></i></button>
       </div>
       <?php endif; ?>

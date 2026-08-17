@@ -22,8 +22,8 @@ $totalUsers    = count($users);
 $activeUsers   = count(array_filter($users, fn($u) => $u['status'] === 'Active'));
 $inactiveUsers = $totalUsers - $activeUsers;
 
-[$successMsg, $successType] = getFlash('user_success');
-[$errorMsg,   $errorType]   = getFlash('user_error');
+$flashSuccess = getFlash('user_success');
+$flashError   = getFlash('user_error');
 
 $pageTitle = 'Manage Users – RHU Rizal Admin';
 require_once __DIR__ . '/../../includes/header.php';
@@ -51,15 +51,15 @@ require_once __DIR__ . '/../../includes/header.php';
     </header>
 
     <div class="page-content">
-      <?php if ($successMsg): ?>
-      <div class="alert alert-<?= $successType ?> alert-dismissible mb-3">
-        <i class="fa-solid fa-circle-check"></i> <?= htmlspecialchars($successMsg) ?>
+      <?php if ($flashSuccess): ?>
+      <div class="alert alert-<?= htmlspecialchars($flashSuccess['type']) ?> alert-dismissible mb-3">
+        <i class="fa-solid fa-circle-check"></i> <?= htmlspecialchars($flashSuccess['message']) ?>
         <button class="alert-close" onclick="this.parentElement.remove()"><i class="fa-solid fa-xmark"></i></button>
       </div>
       <?php endif; ?>
-      <?php if ($errorMsg): ?>
-      <div class="alert alert-<?= $errorType ?> alert-dismissible mb-3">
-        <i class="fa-solid fa-circle-exclamation"></i> <?= htmlspecialchars($errorMsg) ?>
+      <?php if ($flashError): ?>
+      <div class="alert alert-<?= htmlspecialchars($flashError['type']) ?> alert-dismissible mb-3">
+        <i class="fa-solid fa-circle-exclamation"></i> <?= htmlspecialchars($flashError['message']) ?>
         <button class="alert-close" onclick="this.parentElement.remove()"><i class="fa-solid fa-xmark"></i></button>
       </div>
       <?php endif; ?>
