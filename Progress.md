@@ -1,4 +1,4 @@
 # Project Progress
 
-progress: 93
-status: Ongoing
+progress: 100
+status: Complete

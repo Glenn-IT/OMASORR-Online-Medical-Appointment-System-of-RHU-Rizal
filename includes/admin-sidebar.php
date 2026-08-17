@@ -50,10 +50,14 @@ $currentPage  = basename($_SERVER['PHP_SELF']);
       <i class="fa-solid fa-calendar"></i> View Calendar
     </a>
 
-    <div class="nav-section-label">Doctors &amp; Users</div>
+    <div class="nav-section-label">Doctors &amp; Patients</div>
     <a class="nav-item <?= $currentPage === 'doctors.php' ? 'active' : '' ?>"
        href="<?= $base ?>/views/admin/doctors.php">
       <i class="fa-solid fa-user-doctor"></i> Doctor Schedule
+    </a>
+    <a class="nav-item <?= $currentPage === 'patients.php' ? 'active' : '' ?>"
+       href="<?= $base ?>/views/admin/patients.php">
+      <i class="fa-solid fa-hospital-user"></i> Patient Records
     </a>
     <a class="nav-item <?= $currentPage === 'users.php' ? 'active' : '' ?>"
        href="<?= $base ?>/views/admin/users.php">
