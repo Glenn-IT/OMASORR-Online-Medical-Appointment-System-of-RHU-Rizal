@@ -104,7 +104,7 @@ git tag | sort | xargs -I{} git log -1 --format="{} %H" {}
 | v5.01 | v5.01 | `83ba2254e897f98811f8a0a8e063d63558518751` |
 | v6.00 | v6.00 | `0869998cd1a31e45f354932604b2f3523d9320ee` |
 | v6.10 | v6.10 | `b86f0cac9b72b45d1c89c417fe335c6ecf92667b` |
-| final-v1.00 | final-v1.00 | `e0a419c24e5bebeeb2d75a133bb7ea0c1dcb1408` |
+| final-v1.00 | final-v1.00 | `350961c0c80b561c28c894fb2fe6ea3fc5fbff68` |
 
 ---
 
