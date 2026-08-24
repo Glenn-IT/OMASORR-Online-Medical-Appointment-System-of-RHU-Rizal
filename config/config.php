@@ -33,6 +33,6 @@ define('BCRYPT_COST', 10);
 define('MAIL_HOST',      'smtp.gmail.com');
 define('MAIL_PORT',      587);
 define('MAIL_USERNAME',  'rhurizalcagayan@gmail.com');
-define('MAIL_PASSWORD',  'frxh imov obxa jxfe');
+define('MAIL_PASSWORD',  'ysgi mypc fqkt jxqe');
 define('MAIL_FROM',      'rhurizalcagayan@gmail.com');
 define('MAIL_FROM_NAME', 'RHU Rizal Clinic');
