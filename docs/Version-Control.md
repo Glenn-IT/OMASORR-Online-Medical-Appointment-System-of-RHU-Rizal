@@ -27,6 +27,7 @@
 | v5.01 | Full System Unlock — all remaining pages | All 4 previously gated pages (`users.php`, `reports.php`, `my-appointments.php`, `medical-history.php`) | None |
 | v6.00 | v5.00 base + Admin: Manage Users, Reports Unlocked | `index.php`, `views/user/signup.php`, `views/admin/login.php`, `views/admin/dashboard.php`, `views/user/dashboard.php`, `views/admin/profile.php`, `views/user/profile.php`, `views/admin/appointments.php`, `views/admin/patients.php`, `views/user/book-appointment.php`, `views/admin/calendar.php`, `views/admin/doctors.php`, `views/admin/users.php`, `views/admin/reports.php` | 2 pages (`my-appointments.php`, `medical-history.php`) |
 | v6.10 | v6.00 base + Admin Navigation Refactor (Patient Records Removed & Redirected) | `index.php`, `views/user/signup.php`, `views/admin/login.php`, `views/admin/dashboard.php`, `views/user/dashboard.php`, `views/admin/profile.php`, `views/user/profile.php`, `views/admin/appointments.php`, `views/user/book-appointment.php`, `views/admin/calendar.php`, `views/admin/doctors.php`, `views/admin/users.php`, `views/admin/reports.php` | 2 pages (`my-appointments.php`, `medical-history.php`) |
+| final-v1.00 | Complete Final System (All Pages Unlocked, Full Features, Defense Readiness & Diagnostics) | All pages across Patient and Admin portals fully unlocked | None |
 
 ---
 
@@ -103,10 +104,11 @@ git tag | sort | xargs -I{} git log -1 --format="{} %H" {}
 | v5.01 | v5.01 | `83ba2254e897f98811f8a0a8e063d63558518751` |
 | v6.00 | v6.00 | `0869998cd1a31e45f354932604b2f3523d9320ee` |
 | v6.10 | v6.10 | `b86f0cac9b72b45d1c89c417fe335c6ecf92667b` |
+| final-v1.00 | final-v1.00 | `e0a419c24e5bebeeb2d75a133bb7ea0c1dcb1408` |
 
 ---
 
-**Note on v6.10:** Built on the v6.00 base with updated admin navigation (Patient Records removed from sidebar & redirected to dashboard).
+**Note on final-v1.00:** Complete, capstone defense-ready build with all pages and features unlocked, patient and admin record management active, defense readiness audit fixes applied, updated Gmail SMTP configuration, and diagnostics tools included.
 
 ---
 
