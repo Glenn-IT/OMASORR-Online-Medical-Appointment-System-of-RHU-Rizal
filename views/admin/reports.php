@@ -7,7 +7,7 @@ $adminName = htmlspecialchars($admin['full_name'] ?? $admin['username']);
 $initial   = strtoupper(substr($adminName, 0, 1));
 
 // --- Filters from GET ---
-$fMonth   = $_GET['month']   ?? '';
+$fMonth   = $_GET['month']   ?? date('m');
 $fStatus  = $_GET['status']  ?? '';
 $fService = $_GET['service'] ?? '';
 
@@ -151,7 +151,7 @@ require_once __DIR__ . '/../../includes/header.php';
                 <?php endforeach; ?>
               </select>
             </div>
-            <?php if ($fMonth || $fStatus || $fService): ?>
+            <?php if (isset($_GET['month']) || $fStatus || $fService): ?>
             <div class="form-group" style="margin-bottom:0;align-self:flex-end;">
               <a href="?" class="btn btn-secondary btn-sm">Clear Filters</a>
             </div>

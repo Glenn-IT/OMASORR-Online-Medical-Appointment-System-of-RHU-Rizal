@@ -3,7 +3,7 @@ require_once __DIR__ . '/../../config/auth.php';
 require_once __DIR__ . '/../../config/database.php';
 requireLogin('admin');
 
-$fMonth   = $_GET['month']   ?? '';
+$fMonth   = $_GET['month']   ?? date('m');
 $fStatus  = $_GET['status']  ?? '';
 $fService = $_GET['service'] ?? '';
 
