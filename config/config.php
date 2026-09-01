@@ -32,7 +32,7 @@ define('BCRYPT_COST', 10);
 // ── Gmail SMTP ──────────────────────────────────────────────
 define('MAIL_HOST',      'smtp.gmail.com');
 define('MAIL_PORT',      587);
-define('MAIL_USERNAME',  'rhurizalcagayan@gmail.com');
-define('MAIL_PASSWORD',  'ysgi mypc fqkt jxqe');
-define('MAIL_FROM',      'rhurizalcagayan@gmail.com');
+define('MAIL_USERNAME',  'prototypev1.03@gmail.com');
+define('MAIL_PASSWORD',  'lqps acqk sbri hxrt');
+define('MAIL_FROM',      'prototypev1.03@gmail.com');
 define('MAIL_FROM_NAME', 'RHU Rizal Clinic');
