@@ -415,9 +415,6 @@ require_once __DIR__ . '/../includes/header.php';
           <i class="fa-solid fa-gauge"></i> Admin Panel
         </a>
       <?php else: ?>
-        <span class="badge badge-info" style="font-size:12px;padding:6px 12px;">
-          <i class="fa-solid fa-eye"></i> Guest Mode
-        </span>
         <a href="<?= BASE_URL ?>/index.php" class="btn btn-outline-primary btn-sm">
           <i class="fa-solid fa-right-to-bracket"></i> Patient Sign In
         </a>

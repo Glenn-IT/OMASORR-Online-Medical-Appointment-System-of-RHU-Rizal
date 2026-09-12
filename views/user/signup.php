@@ -196,7 +196,7 @@ require_once __DIR__ . '/../../includes/header.php';
       </p>
       <div class="text-center mt-2">
         <a href="<?= $base ?>/schedule.php" class="link-primary" style="font-size:12px">
-          <i class="fa-solid fa-calendar-days"></i> View Doctor Schedules &amp; Vacant Slots (Guest)
+          <i class="fa-solid fa-calendar-days"></i> View Doctor Schedules &amp; Vacant Slots
         </a>
       </div>
     </div>

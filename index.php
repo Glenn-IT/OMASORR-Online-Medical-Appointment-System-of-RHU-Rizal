@@ -83,7 +83,7 @@ require_once __DIR__ . '/includes/header.php';
         </button>
 
         <a href="<?= $base ?>/schedule.php" class="btn btn-outline-secondary btn-block mt-2" style="text-align:center;justify-content:center;border-color:var(--primary);color:var(--primary);font-weight:600;">
-          <i class="fa-solid fa-calendar-days"></i> View Schedules &amp; Vacant Slots (Guest)
+          <i class="fa-solid fa-calendar-days"></i> View Schedules &amp; Vacant Slots
         </a>
 
         <div class="section-divider mt-3">or</div>
