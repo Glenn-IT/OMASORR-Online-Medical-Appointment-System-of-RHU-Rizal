@@ -161,60 +161,124 @@ $extraScripts = <<<'JS'
     loadTimeSlots(this.value);
   });
 
+  document.getElementById('doctor')?.addEventListener('change', function() {
+    const date = document.getElementById('aptDate').value;
+    if (date) loadTimeSlots(date);
+  });
+
   async function loadTimeSlots(date) {
     const card      = document.getElementById('timeSlotsCard');
     const container = document.getElementById('timeSlots');
     const selectEl  = document.getElementById('aptTime');
-    const doctorEl  = document.getElementById('doctorSelect');
+    const notice    = document.getElementById('timeNotice');
+    const doctorEl  = document.getElementById('doctor');
     const doctorId  = doctorEl ? doctorEl.value : '';
     const prevVal   = selectEl.value;
 
     card.style.display = 'block';
-    container.innerHTML = '<p style="text-align:center;color:#888;font-size:13px">Loading...</p>';
+    container.innerHTML = '<p style="text-align:center;color:#888;font-size:13px"><i class="fa-solid fa-spinner fa-spin"></i> Loading availability...</p>';
 
     let bookedTimes = [];
+    let pastTimes   = [];
     try {
       const res  = await fetch(`${BASE}/actions/api/get-booked-dates.php?date=${date}&doctor_id=${doctorId}`);
       const data = await res.json();
       bookedTimes = data.booked_times || [];
+      pastTimes   = data.past_times || [];
     } catch(e) {}
+
+    // Check if date is today in local time
+    const now = new Date();
+    const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    const isToday = (date === todayStr);
+    const currentHourMin = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
+
+    let availableCount = 0;
 
     // Rebuild select options to reflect availability for the chosen date
     selectEl.innerHTML = '<option value="">-- Select Time --</option>' +
       TIME_SLOTS.map(([val, label]) => {
-        const taken = bookedTimes.includes(val);
-        return `<option value="${val}"${taken ? ' disabled' : ''}>${label}${taken ? ' — Booked' : ''}</option>`;
+        const isPast = isToday && (val <= currentHourMin || pastTimes.includes(val));
+        const taken  = bookedTimes.includes(val);
+        const disabled = taken || isPast;
+
+        let suffix = '';
+        if (isPast) {
+          suffix = ' — Passed';
+        } else if (taken) {
+          suffix = ' — Booked';
+        } else {
+          availableCount++;
+        }
+
+        return `<option value="${val}"${disabled ? ' disabled' : ''}>${label}${suffix}</option>`;
       }).join('');
 
-    // Restore previous selection if it is still available; warn if it is now taken
-    if (prevVal && bookedTimes.includes(prevVal)) {
+    // Restore previous selection if it is still available; warn if it is now taken/passed
+    const prevIsUnavailable = prevVal && (bookedTimes.includes(prevVal) || (isToday && (prevVal <= currentHourMin || pastTimes.includes(prevVal))));
+    if (prevIsUnavailable) {
       selectEl.value = '';
-      notice.style.display = 'flex';
+      if (notice) notice.style.display = 'flex';
     } else if (prevVal) {
       selectEl.value = prevVal;
-      notice.style.display = 'none';
+      if (notice) notice.style.display = 'none';
     } else {
-      notice.style.display = 'none';
+      if (notice) notice.style.display = 'none';
+    }
+
+    // Notice if all slots today have ended
+    let noticeHtml = '';
+    if (isToday && availableCount === 0) {
+      noticeHtml = `<div style="grid-column:1/-1;background:#fff3cd;border:1px solid #ffeeba;color:#856404;border-radius:8px;padding:10px 14px;font-size:12px;margin-bottom:8px;">
+        <i class="fa-solid fa-clock"></i> <strong>Today's appointment hours have ended.</strong> Please choose tomorrow or a future clinic date.
+      </div>`;
     }
 
     // Update visual time-slot grid
-    container.innerHTML = TIME_SLOTS.map(([val, label]) => {
-      const taken = bookedTimes.includes(val);
-      return `<div onclick="${!taken ? `selectTimeSlot('${val}', this)` : ''}"
+    container.innerHTML = noticeHtml + TIME_SLOTS.map(([val, label]) => {
+      const isPast = isToday && (val <= currentHourMin || pastTimes.includes(val));
+      const taken  = bookedTimes.includes(val);
+      const isAvailable = !taken && !isPast;
+
+      let bg = '#e8f5ee';
+      let color = 'var(--primary)';
+      let border = '1.5px solid #82e0aa';
+      let cursor = 'pointer';
+      let statusText = 'Available';
+      let title = 'Click to select this slot';
+
+      if (isPast) {
+        bg = '#f3f4f6';
+        color = '#9ca3af';
+        border = '1.5px solid #e5e7eb';
+        cursor = 'not-allowed';
+        statusText = 'Passed';
+        title = 'This time slot has already passed for today';
+      } else if (taken) {
+        bg = '#fdecea';
+        color = 'var(--danger)';
+        border = '1.5px solid #f1948a';
+        cursor = 'not-allowed';
+        statusText = 'Taken';
+        title = 'This slot is already booked';
+      }
+
+      return `<div onclick="${isAvailable ? `selectTimeSlot('${val}', this)` : ''}"
         style="padding:8px;text-align:center;border-radius:8px;font-size:12px;font-weight:500;
-               cursor:${taken?'not-allowed':'pointer'};
-               background:${taken?'#fdecea':'#e8f5ee'};
-               color:${taken?'var(--danger)':'var(--primary)'};
-               border:1.5px solid ${taken?'#f1948a':'#82e0aa'};transition:var(--transition);"
-        title="${taken?'This slot is already booked':'Click to select this slot'}">
-        ${label}<br><span style="font-size:10px;opacity:.7">${taken?'Taken':'Available'}</span>
+               cursor:${cursor};
+               background:${bg};
+               color:${color};
+               border:${border};transition:var(--transition);"
+        title="${title}">
+        ${label}<br><span style="font-size:10px;opacity:.8">${statusText}</span>
       </div>`;
     }).join('');
   }
 
   function selectTimeSlot(time, el) {
     document.getElementById('aptTime').value = time;
-    document.getElementById('timeNotice').style.display = 'none';
+    const notice = document.getElementById('timeNotice');
+    if (notice) notice.style.display = 'none';
     document.querySelectorAll('#timeSlots > div').forEach(d => d.style.outline = 'none');
     el.style.outline = '2px solid var(--primary)';
     showToast('Time slot selected: ' + formatTime(time), 'info');

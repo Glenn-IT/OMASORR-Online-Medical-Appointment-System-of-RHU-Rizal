@@ -799,11 +799,17 @@ require_once __DIR__ . '/../includes/header.php';
   // Holidays array from PHP
   const HOLIDAYS = <?= json_encode(array_column($holidays, 'date')) ?>;
 
+  function formatLocalDate(d) {
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+
   function setQuickDate(offsetDays) {
     const d = new Date();
     d.setDate(d.getDate() + offsetDays);
-    const dateStr = d.toISOString().split('T')[0];
-    document.getElementById('targetDate').value = dateStr;
+    document.getElementById('targetDate').value = formatLocalDate(d);
     refreshSlots();
   }
 
@@ -813,7 +819,7 @@ require_once __DIR__ . '/../includes/header.php';
     while (d.getDay() === 0 || d.getDay() === 6) { // Skip Saturday and Sunday
       d.setDate(d.getDate() + 1);
     }
-    document.getElementById('targetDate').value = d.toISOString().split('T')[0];
+    document.getElementById('targetDate').value = formatLocalDate(d);
     refreshSlots();
   }
 
@@ -865,7 +871,8 @@ require_once __DIR__ . '/../includes/header.php';
         <div style="grid-column:1/-1;text-align:center;padding:40px 20px;background:#fdf2e9;border-radius:10px;border:1px solid #f5cba7;">
           <i class="fa-solid fa-calendar-xmark text-danger" style="font-size:32px;margin-bottom:10px;"></i>
           <h4 style="color:#b9770e;margin-bottom:6px;">Clinic Closed on this Date</h4>
-          <p style="color:var(--gray-700);margin:0;font-size:13px;">${reason} Please select a weekday (Monday to Friday) to view open appointment slots.</p>
+          <p style="color:var(--gray-700);margin:0 0 16px;font-size:13px;">${reason} Please select a weekday (Monday to Friday) to view open appointment slots.</p>
+          <button type="button" class="btn btn-primary btn-sm" onclick="setNextWeekday()"><i class="fa-regular fa-calendar-plus"></i> View Next Clinic Day</button>
         </div>
       `;
       return;
@@ -880,22 +887,25 @@ require_once __DIR__ . '/../includes/header.php';
     `;
 
     let bookedTimes = [];
+    let pastTimes   = [];
     try {
       const res = await fetch(`${BASE}/actions/api/get-booked-dates.php?date=${dateVal}&doctor_id=${doctorId}`);
       const data = await res.json();
       bookedTimes = data.booked_times || [];
+      pastTimes   = data.past_times || [];
     } catch(e) {
       console.error('Error fetching booked dates', e);
     }
 
     let vacantCount = 0;
     const now = new Date();
-    const isToday = (now.toISOString().split('T')[0] === dateVal);
+    const isToday = (formatLocalDate(now) === dateVal);
     const currentHourMin = String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
 
+    let noticeHtml = '';
     const html = TIME_SLOTS.map(([timeVal, label]) => {
       const isTaken = bookedTimes.includes(timeVal);
-      const isPast = isToday && (timeVal < currentHourMin);
+      const isPast = isToday && (timeVal <= currentHourMin || pastTimes.includes(timeVal));
 
       if (isPast) {
         return `
@@ -926,7 +936,18 @@ require_once __DIR__ . '/../includes/header.php';
       `;
     }).join('');
 
-    container.innerHTML = html;
+    if (isToday && vacantCount === 0) {
+      noticeHtml = `
+        <div style="grid-column:1/-1;background:#fff3cd;border:1px solid #ffeeba;color:#856404;border-radius:10px;padding:16px 20px;text-align:center;margin-bottom:8px;">
+          <div style="font-weight:700;font-size:14px;margin-bottom:4px;"><i class="fa-solid fa-clock"></i> Today's Appointment Hours Have Ended</div>
+          <p style="margin:0 0 12px;font-size:13px;">All clinic time slots (8:00 AM – 4:00 PM) for today have passed. Please check tomorrow or the next clinic day for open slots.</p>
+          <button type="button" class="btn btn-outline-primary btn-sm" onclick="setQuickDate(1)"><i class="fa-regular fa-calendar-days"></i> Check Tomorrow's Slots</button>
+          <button type="button" class="btn btn-primary btn-sm" onclick="setNextWeekday()"><i class="fa-solid fa-calendar-week"></i> Check Next Weekday</button>
+        </div>
+      `;
+    }
+
+    container.innerHTML = noticeHtml + html;
 
     badgeContainer.innerHTML = `
       <span class="badge ${vacantCount > 0 ? 'badge-success' : 'badge-danger'}" style="font-size:12px;padding:6px 12px;">

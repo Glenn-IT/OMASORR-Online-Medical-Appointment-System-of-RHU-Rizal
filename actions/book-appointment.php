@@ -27,6 +27,9 @@ if (!$serviceId)                       $errors[] = 'Please select a service.';
 if (!$doctorId)                        $errors[] = 'Please select a doctor.';
 if (!$date || $date < date('Y-m-d'))   $errors[] = 'Please select a valid future date.';
 if (!$time)                            $errors[] = 'Please select a time slot.';
+if ($date === date('Y-m-d') && $time && $time <= date('H:i')) {
+    $errors[] = 'The selected time slot has already passed for today. Please select an upcoming time slot or a future date.';
+}
 if (!$reason)                          $errors[] = 'Please describe your reason for the visit.';
 
 if ($errors) {
