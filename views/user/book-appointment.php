@@ -12,6 +12,10 @@ $pdo      = db();
 $services = $pdo->query("SELECT id, name FROM services ORDER BY name")->fetchAll();
 $doctors  = $pdo->query("SELECT id, name, specialty FROM doctors WHERE available = 1 ORDER BY name")->fetchAll();
 
+$prefillDoc  = (int) ($_GET['doctor_id'] ?? 0);
+$prefillDate = trim($_GET['date'] ?? '');
+$prefillTime = trim($_GET['time'] ?? '');
+
 $flash = getFlash('book_error');
 
 $pageTitle = 'Book Appointment – RHU Rizal';
@@ -62,14 +66,14 @@ require_once __DIR__ . '/../../includes/header.php';
                 <select class="form-select" id="doctor" name="doctor_id" required>
                   <option value="">-- Select Doctor --</option>
                   <?php foreach ($doctors as $doc): ?>
-                  <option value="<?= $doc['id'] ?>"><?= htmlspecialchars($doc['name']) ?> – <?= htmlspecialchars($doc['specialty']) ?></option>
+                  <option value="<?= $doc['id'] ?>" <?= $doc['id'] == $prefillDoc ? 'selected' : '' ?>><?= htmlspecialchars($doc['name']) ?> – <?= htmlspecialchars($doc['specialty']) ?></option>
                   <?php endforeach; ?>
                 </select>
               </div>
               <div class="form-row">
                 <div class="form-group">
                   <label class="form-label">Preferred Date *</label>
-                  <input type="date" class="form-control" id="aptDate" name="date" min="<?= date('Y-m-d') ?>" required />
+                  <input type="date" class="form-control" id="aptDate" name="date" min="<?= date('Y-m-d') ?>" value="<?= htmlspecialchars($prefillDate) ?>" required />
                 </div>
                 <div class="form-group">
                   <label class="form-label">Preferred Time *</label>
@@ -244,6 +248,21 @@ $extraScripts = <<<'JS'
       <div class="detail-item"><div class="detail-label">Time</div><div class="detail-value">${formatTime(time)}</div></div>
       <div class="detail-item"><div class="detail-label">Reason</div><div class="detail-value">${reason}</div></div>`;
     openModal('confirmModal');
+  }
+
+  // Pre-fill from Guest Schedule Viewer if passed
+  const PREFILL_DATE = '<?= htmlspecialchars($prefillDate) ?>';
+  const PREFILL_TIME = '<?= htmlspecialchars($prefillTime) ?>';
+  if (PREFILL_DATE) {
+    loadTimeSlots(PREFILL_DATE).then(() => {
+      if (PREFILL_TIME) {
+        document.getElementById('aptTime').value = PREFILL_TIME;
+        const matchingSlot = Array.from(document.querySelectorAll('#timeSlots > div')).find(d => d.textContent.includes(formatTime(PREFILL_TIME)));
+        if (matchingSlot) {
+          matchingSlot.style.outline = '2px solid var(--primary)';
+        }
+      }
+    });
   }
 </script>
 JS;

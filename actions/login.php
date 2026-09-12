@@ -73,7 +73,16 @@ try {
     ];
 
     setPatientSession($patient, $user);
-    redirectTo('/views/user/dashboard.php');
+
+    $redirect = trim($_POST['redirect'] ?? '');
+    if ($redirect && str_starts_with($redirect, BASE_URL)) {
+        $path = substr($redirect, strlen(BASE_URL));
+        redirectTo($path);
+    } elseif ($redirect && str_starts_with($redirect, '/views/')) {
+        redirectTo($redirect);
+    } else {
+        redirectTo('/views/user/dashboard.php');
+    }
 
 } catch (RuntimeException $e) {
     flashMessage('login_error', 'A server error occurred. Please try again later.', 'danger');

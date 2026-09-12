@@ -190,10 +190,15 @@ require_once __DIR__ . '/../../includes/header.php';
 
       </form><!-- /signupForm -->
 
-      <p class="text-center mt-2" style="font-size:13px" id="loginLink">
+      <p class="text-center mt-3" style="font-size:13px">
         Already have an account?
         <a href="<?= $base ?>/index.php" class="link-primary">Sign In</a>
       </p>
+      <div class="text-center mt-2">
+        <a href="<?= $base ?>/schedule.php" class="link-primary" style="font-size:12px">
+          <i class="fa-solid fa-calendar-days"></i> View Doctor Schedules &amp; Vacant Slots (Guest)
+        </a>
+      </div>
     </div>
   </div>
 

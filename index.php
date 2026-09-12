@@ -52,6 +52,7 @@ require_once __DIR__ . '/includes/header.php';
 
       <form method="post" action="<?= BASE_URL ?>/actions/login.php" autocomplete="off">
         <?= csrfField() ?>
+        <input type="hidden" name="redirect" value="<?= htmlspecialchars($_GET['redirect'] ?? $_POST['redirect'] ?? '') ?>">
         <div class="form-group">
           <label class="form-label">Username</label>
           <div class="input-group">
@@ -80,6 +81,10 @@ require_once __DIR__ . '/includes/header.php';
         <button type="submit" class="btn btn-primary btn-block btn-lg" id="loginBtn">
           <i class="fa-solid fa-right-to-bracket"></i> Sign In
         </button>
+
+        <a href="<?= $base ?>/schedule.php" class="btn btn-outline-secondary btn-block mt-2" style="text-align:center;justify-content:center;border-color:var(--primary);color:var(--primary);font-weight:600;">
+          <i class="fa-solid fa-calendar-days"></i> View Schedules &amp; Vacant Slots (Guest)
+        </a>
 
         <div class="section-divider mt-3">or</div>
 
