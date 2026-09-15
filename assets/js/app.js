@@ -284,6 +284,41 @@ function formatTime(timeStr) {
 }
 
 // ============================================================
+// PAGE LOADER
+// ============================================================
+function hideLoader() {
+  const loader = document.getElementById("page-loader");
+  if (loader && !loader.classList.contains("loaded")) {
+    loader.classList.add("loaded");
+  }
+}
+
+function showLoader(subtext) {
+  const loader = document.getElementById("page-loader");
+  if (loader) {
+    if (subtext) {
+      const sub = loader.querySelector(".loader-sub");
+      if (sub) sub.textContent = subtext;
+    }
+    loader.classList.remove("loaded");
+  }
+}
+
+// Automatically hide loader on window load
+window.addEventListener("load", hideLoader);
+
+// Safety fallback: ensure loader dismisses within 1.2s max if load already fired or slow CDN
+setTimeout(hideLoader, 1200);
+
+// Global form submit handler for smooth loading feedback
+document.addEventListener("submit", (e) => {
+  const form = e.target;
+  if (!form.hasAttribute("data-no-loader")) {
+    showLoader("Processing request...");
+  }
+});
+
+// ============================================================
 // INIT
 // ============================================================
 document.addEventListener("DOMContentLoaded", () => {
@@ -291,3 +326,4 @@ document.addEventListener("DOMContentLoaded", () => {
   initTabs();
   setSidebarActive();
 });
+

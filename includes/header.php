@@ -26,3 +26,18 @@ $base = '/rhu-appointment-system';
   <?= $extraHead ?? '' ?>
 </head>
 <body>
+  <!-- Global RHU Rizal Page Loader -->
+  <div id="page-loader" class="page-loader" aria-live="polite">
+    <div class="loader-content">
+      <div class="loader-pulse-ring"></div>
+      <div class="loader-icon-box">
+        <i class="fa-solid fa-heart-pulse"></i>
+      </div>
+      <div class="loader-title">RHU Rizal</div>
+      <div class="loader-sub">Online Medical Appointment System</div>
+      <div class="loader-bar-wrap">
+        <div class="loader-bar"></div>
+      </div>
+    </div>
+  </div>
+
