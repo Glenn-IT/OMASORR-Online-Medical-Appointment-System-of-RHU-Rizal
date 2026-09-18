@@ -49,6 +49,10 @@ function showToast(message, type = "success", title = null) {
 function openModal(id) {
   const el = document.getElementById(id);
   if (el) {
+    const sidebar = document.querySelector(".sidebar");
+    const sidebarOverlay = document.querySelector(".sidebar-overlay");
+    sidebar?.classList.remove("open");
+    sidebarOverlay?.classList.remove("show");
     el.classList.add("show");
     document.body.style.overflow = "hidden";
   }
@@ -67,13 +71,18 @@ function closeAllModals() {
   document.body.style.overflow = "";
 }
 
-// Close modal on overlay click
+// Close modal on overlay click or close button
 document.addEventListener("click", (e) => {
   if (e.target.classList.contains("modal-overlay")) closeAllModals();
   if (e.target.closest("[data-modal-close]")) {
     const id = e.target.closest("[data-modal-close]").dataset.modalClose;
     closeModal(id);
   }
+});
+
+// Close modal on Escape key
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") closeAllModals();
 });
 
 // ============================================================

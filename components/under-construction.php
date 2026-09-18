@@ -39,7 +39,7 @@ $_ucLoggedIn = isLoggedIn('patient') || isLoggedIn('admin');
     <h1 class="uc-title">Under Construction</h1>
     <p class="uc-text">This page is not yet available in the current version.<br>It will be unlocked in a future release.</p>
     <?php if ($_ucLoggedIn): ?>
-    <a href="<?= $base ?>/actions/logout.php" class="uc-back" style="background:#dc2626;" onmouseover="this.style.background='#b91c1c'" onmouseout="this.style.background='#dc2626'">
+    <a href="<?= $base ?>/actions/logout.php" class="uc-back" style="background:#dc2626;" onmouseover="this.style.background='#b91c1c'" onmouseout="this.style.background='#dc2626'" onclick="return confirm('Are you sure you want to log out?');">
       <i class="fas fa-right-from-bracket"></i> Logout
     </a>
     <?php else: ?>

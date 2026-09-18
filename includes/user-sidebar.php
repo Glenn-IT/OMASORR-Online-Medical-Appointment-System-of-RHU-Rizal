@@ -57,7 +57,7 @@ $currentPage = basename($_SERVER['PHP_SELF']);
        href="<?= $base ?>/views/user/profile.php">
       <i class="fa-solid fa-circle-user"></i> My Profile
     </a>
-    <a class="nav-item" href="<?= $base ?>/actions/logout.php">
+    <a class="nav-item" href="javascript:void(0);" onclick="openModal('logoutModal')">
       <i class="fa-solid fa-right-from-bracket"></i> Logout
     </a>
   </nav>
@@ -69,3 +69,5 @@ $currentPage = basename($_SERVER['PHP_SELF']);
   </div>
 </aside>
 <div class="sidebar-overlay" id="sidebarOverlay"></div>
+<?php require_once __DIR__ . '/logout-modal.php'; ?>
+

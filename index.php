@@ -36,6 +36,13 @@ require_once __DIR__ . '/includes/header.php';
         <p>Rural Health Unit – Municipality of Rizal</p>
       </div>
 
+      <?php if (isset($_GET['logged_out'])): ?>
+      <div class="alert alert-success mb-2" role="alert">
+        <i class="fa-solid fa-circle-check"></i>
+        <div>You have been successfully logged out.</div>
+      </div>
+      <?php endif; ?>
+
       <?php if ($flashSuccess): ?>
       <div class="alert alert-success mb-2" role="alert">
         <i class="fa-solid fa-circle-check"></i>

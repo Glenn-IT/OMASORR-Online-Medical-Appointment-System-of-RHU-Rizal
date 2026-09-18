@@ -33,6 +33,13 @@ require_once __DIR__ . '/../../includes/header.php';
         <p>RHU Rizal – System Administrator</p>
       </div>
 
+      <?php if (isset($_GET['logged_out'])): ?>
+      <div class="alert alert-success mb-2" role="alert">
+        <i class="fa-solid fa-circle-check"></i>
+        <div>You have been successfully logged out.</div>
+      </div>
+      <?php endif; ?>
+
       <?php if ($flash): ?>
       <div class="alert alert-<?= htmlspecialchars($flash['type']) ?> mb-2" role="alert">
         <i class="fa-solid fa-circle-exclamation"></i>
