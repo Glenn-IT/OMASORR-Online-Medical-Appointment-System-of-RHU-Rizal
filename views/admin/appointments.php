@@ -416,7 +416,7 @@ require_once __DIR__ . '/../../includes/header.php';
     <div class="modal-body" id="viewConsultBody" style="max-height:calc(85vh - 130px);overflow-y:auto;padding:22px;"></div>
     <div class="modal-footer">
       <button type="button" class="btn btn-secondary" data-modal-close="viewConsultModal">Close</button>
-      <button type="button" class="btn btn-primary" onclick="window.print()"><i class="fa-solid fa-print"></i> Print Consultation Sheet</button>
+      <a href="#" id="adminConsultPrintBtn" target="_blank" class="btn btn-primary"><i class="fa-solid fa-print"></i> Print Official ITR</a>
     </div>
   </div>
 </div>
@@ -580,6 +580,10 @@ ob_start();
         <div class="detail-item"><div class="detail-label">Lab Findings / Impression</div><div class="detail-value">${a.lab_findings || 'None'}</div></div>
       </div>
     `;
+    const adminPrintBtn = document.getElementById('adminConsultPrintBtn');
+    if (adminPrintBtn) {
+      adminPrintBtn.href = '<?= BASE_URL ?>/views/user/print-medical-history.php?id=' + a.id + '&auto=1';
+    }
     openModal('viewConsultModal');
   }
 

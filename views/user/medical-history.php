@@ -107,7 +107,12 @@ require_once __DIR__ . '/../../includes/header.php';
                     </span>
                   </td>
                   <td><span class="status-badge-wrap" data-status="<?= htmlspecialchars($a['status']) ?>"></span></td>
-                  <td><button class="btn btn-sm btn-info" onclick="viewHistory(<?= $a['id'] ?>)"><i class="fa-solid fa-eye"></i> View Record</button></td>
+                  <td>
+                    <div style="display:flex;gap:6px;align-items:center;">
+                      <button class="btn btn-sm btn-info" onclick="viewHistory(<?= $a['id'] ?>)"><i class="fa-solid fa-eye"></i> View</button>
+                      <a href="<?= BASE_URL ?>/views/user/print-medical-history.php?id=<?= $a['id'] ?>&auto=1" target="_blank" class="btn btn-sm btn-primary" title="Print Official Individual Treatment Record (ITR)"><i class="fa-solid fa-print"></i> Print ITR</a>
+                    </div>
+                  </td>
                 </tr>
                 <?php endforeach; endif; ?>
               </tbody>
@@ -128,7 +133,7 @@ require_once __DIR__ . '/../../includes/header.php';
       <div class="modal-body" id="historyModalBody" style="max-height:calc(85vh - 130px);overflow-y:auto;padding:22px;"></div>
       <div class="modal-footer">
         <button class="btn btn-secondary" data-modal-close="historyModal">Close</button>
-        <button class="btn btn-primary" onclick="window.print()"><i class="fa-solid fa-print"></i> Print Record</button>
+        <a href="#" id="modalPrintItrBtn" target="_blank" class="btn btn-primary"><i class="fa-solid fa-print"></i> Print Official ITR</a>
       </div>
     </div>
   </div>
@@ -189,6 +194,11 @@ ob_start();
   function viewHistory(id) {
     const a = HISTORY.find(x => x.id === id); 
     if (!a) return;
+
+    const printBtn = document.getElementById('modalPrintItrBtn');
+    if (printBtn) {
+      printBtn.href = '<?= BASE_URL ?>/views/user/print-medical-history.php?id=' + a.id + '&auto=1';
+    }
 
     const dobFormatted = a.dob ? formatDate(a.dob) : '—';
     const consultDateFormatted = formatDate(a.consultation_date || a.date);

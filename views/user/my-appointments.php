@@ -94,6 +94,11 @@ require_once __DIR__ . '/../../includes/header.php';
                   <td><span class="status-badge-wrap" data-status="<?= htmlspecialchars($a['status']) ?>"></span></td>
                   <td><div class="actions">
                     <button class="btn btn-sm btn-info" onclick="viewAppointment(<?= $a['id'] ?>)"><i class="fa-solid fa-eye"></i></button>
+                    <?php if ($a['status'] === 'Completed'): ?>
+                    <a href="<?= BASE_URL ?>/views/user/print-medical-history.php?id=<?= $a['id'] ?>&auto=1" target="_blank" class="btn btn-sm btn-primary" title="Print Official Individual Treatment Record (ITR)">
+                      <i class="fa-solid fa-print"></i>
+                    </a>
+                    <?php endif; ?>
                     <?php if (in_array($a['status'], ['Pending','Approved'])): ?>
                     <form method="post" action="<?= BASE_URL ?>/actions/cancel-appointment.php" style="display:inline" id="cancelForm<?= $a['id'] ?>">
                       <?= csrfField() ?>
@@ -120,7 +125,7 @@ require_once __DIR__ . '/../../includes/header.php';
     <div class="modal-box">
       <div class="modal-header"><h5><i class="fa-solid fa-calendar-check"></i> Appointment Details</h5><button class="modal-close" data-modal-close="viewModal"><i class="fa-solid fa-xmark"></i></button></div>
       <div class="modal-body" id="viewModalBody"></div>
-      <div class="modal-footer"><button class="btn btn-secondary" data-modal-close="viewModal">Close</button></div>
+      <div class="modal-footer" id="viewModalFooter"><button class="btn btn-secondary" data-modal-close="viewModal">Close</button></div>
     </div>
   </div>
 
@@ -168,6 +173,7 @@ require_once __DIR__ . '/../../includes/header.php';
   </div>
 
 <?php
+$baseUrl  = BASE_URL;
 $apptJson = json_encode(array_map(fn($a) => [
     'id'          => (int) $a['id'],
     'appt_no'     => $a['appt_no'],
@@ -229,6 +235,11 @@ $extraScripts = <<<JS
       '<div class="detail-item"><div class="detail-label">Booked On</div><div class="detail-value">' + formatDate(a.created_at) + '</div></div>' +
       adminNoteHtml +
       '</div>';
+    const footer = document.getElementById('viewModalFooter');
+    if (footer) {
+      footer.innerHTML = '<button class="btn btn-secondary" data-modal-close="viewModal">Close</button>' +
+        (a.status === 'Completed' ? ' <a href="' + '{$baseUrl}' + '/views/user/print-medical-history.php?id=' + a.id + '&auto=1" target="_blank" class="btn btn-primary"><i class="fa-solid fa-print"></i> Print ITR Form</a>' : '');
+    }
     openModal('viewModal');
   }
 
