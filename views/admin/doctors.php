@@ -372,7 +372,9 @@ require_once __DIR__ . '/../../includes/header.php';
 </div>
 
 <?php
-$extraScripts = <<<'SCRIPTS'
+$autoOpenAdd = ($flashError && !isset($_POST['id']));
+ob_start();
+?>
 <script>
   const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
@@ -571,10 +573,11 @@ $extraScripts = <<<'SCRIPTS'
   }
 
   // Auto-open add modal if redirected back with error on add
-  <?php if ($flashError && !isset($_POST['id'])): ?>
+  <?php if ($autoOpenAdd): ?>
   document.addEventListener("DOMContentLoaded", () => prepareAddDoctorModal());
   <?php endif; ?>
 </script>
-SCRIPTS;
+<?php
+$extraScripts = ob_get_clean();
 require_once __DIR__ . '/../../includes/footer.php';
 ?>
