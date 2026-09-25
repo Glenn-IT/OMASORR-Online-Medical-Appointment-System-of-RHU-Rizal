@@ -20,6 +20,62 @@ $flashSuccess = getFlash('doctor_success');
 $flashError   = getFlash('doctor_error');
 
 $pageTitle = 'Doctor Schedule – RHU Rizal Admin';
+$extraHead = <<<'CSS'
+<style>
+  .day-selector-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+  .day-chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 14px;
+    border-radius: 8px;
+    border: 1.5px solid var(--gray-300);
+    background: var(--gray-100);
+    color: var(--gray-700);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    user-select: none;
+    transition: all 0.2s ease;
+  }
+  .day-chip input[type="checkbox"] {
+    display: none;
+  }
+  .day-chip:hover {
+    border-color: var(--primary);
+    background: #fff;
+  }
+  .day-chip.checked,
+  .day-chip:has(input:checked) {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: #fff;
+    box-shadow: 0 2px 4px rgba(26, 107, 60, 0.25);
+  }
+  .schedule-preview-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--primary-light);
+    color: var(--primary);
+    border: 1px solid rgba(26, 107, 60, 0.25);
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 12.5px;
+    font-weight: 500;
+  }
+  .schedule-preview-badge.empty {
+    background: #fdf2e9;
+    color: #b9770e;
+    border-color: #f5cba7;
+  }
+</style>
+CSS;
 require_once __DIR__ . '/../../includes/header.php';
 ?>
 <div class="app-wrapper">
@@ -37,7 +93,7 @@ require_once __DIR__ . '/../../includes/header.php';
         </div>
       </div>
       <div class="topbar-right">
-        <button class="btn btn-primary btn-sm" onclick="openModal('addDoctorModal')">
+        <button class="btn btn-primary btn-sm" onclick="prepareAddDoctorModal()">
           <i class="fa-solid fa-plus"></i> Add Doctor
         </button>
         <div class="topbar-user">
@@ -158,7 +214,7 @@ require_once __DIR__ . '/../../includes/header.php';
       <h5><i class="fa-solid fa-user-doctor"></i> Add New Doctor</h5>
       <button class="modal-close" data-modal-close="addDoctorModal"><i class="fa-solid fa-xmark"></i></button>
     </div>
-    <form method="post" action="<?= BASE_URL ?>/actions/admin/save-doctor.php">
+    <form method="post" action="<?= BASE_URL ?>/actions/admin/save-doctor.php" onsubmit="return validateDoctorForm('add')">
       <?= $csrf ?>
       <input type="hidden" name="id" value="0">
       <div class="modal-body">
@@ -171,8 +227,51 @@ require_once __DIR__ . '/../../includes/header.php';
           <input type="text" class="form-control" name="specialty" placeholder="e.g. General Medicine" required />
         </div>
         <div class="form-group">
-          <label class="form-label">Schedule *</label>
-          <input type="text" class="form-control" name="schedule" placeholder="e.g. Mon-Wed-Fri" required />
+          <label class="form-label">Duty Schedule *</label>
+          <div style="margin-bottom:8px;">
+            <select class="form-select" id="addSchedulePreset" onchange="applySchedulePreset('add')">
+              <option value="">-- Choose Quick Preset or Pick Days Below --</option>
+              <option value="Mon-Sat">Monday to Saturday (Mon-Sat)</option>
+              <option value="Mon-Fri">Monday to Friday (Mon-Fri)</option>
+              <option value="Mon-Wed-Fri">Monday, Wednesday, Friday (Mon-Wed-Fri)</option>
+              <option value="Tue-Thu">Tuesday, Thursday (Tue-Thu)</option>
+              <option value="Mon-Thu">Monday to Thursday (Mon-Thu)</option>
+              <option value="Wed-Fri">Wednesday, Friday (Wed-Fri)</option>
+              <option value="Tue-Fri">Tuesday to Friday (Tue-Fri)</option>
+              <option value="Sat">Saturday Only (Sat)</option>
+              <option value="custom">Custom Days Selection</option>
+            </select>
+          </div>
+          <div class="day-selector-group" id="addDaySelectorGroup">
+            <label class="day-chip" id="addChip_Mon">
+              <input type="checkbox" name="schedule_days[]" value="Mon" onchange="syncScheduleFromDays('add')">
+              <span>Mon</span>
+            </label>
+            <label class="day-chip" id="addChip_Tue">
+              <input type="checkbox" name="schedule_days[]" value="Tue" onchange="syncScheduleFromDays('add')">
+              <span>Tue</span>
+            </label>
+            <label class="day-chip" id="addChip_Wed">
+              <input type="checkbox" name="schedule_days[]" value="Wed" onchange="syncScheduleFromDays('add')">
+              <span>Wed</span>
+            </label>
+            <label class="day-chip" id="addChip_Thu">
+              <input type="checkbox" name="schedule_days[]" value="Thu" onchange="syncScheduleFromDays('add')">
+              <span>Thu</span>
+            </label>
+            <label class="day-chip" id="addChip_Fri">
+              <input type="checkbox" name="schedule_days[]" value="Fri" onchange="syncScheduleFromDays('add')">
+              <span>Fri</span>
+            </label>
+            <label class="day-chip" id="addChip_Sat">
+              <input type="checkbox" name="schedule_days[]" value="Sat" onchange="syncScheduleFromDays('add')">
+              <span>Sat</span>
+            </label>
+          </div>
+          <div class="schedule-preview-badge empty" id="addScheduleBadge">
+            <i class="fa-solid fa-calendar-days"></i> Selected: <strong id="addScheduleText" style="margin-left:4px;">None selected</strong>
+          </div>
+          <input type="hidden" name="schedule" id="addDocSchedule" required />
         </div>
         <div class="form-group">
           <label class="form-label">Availability</label>
@@ -197,7 +296,7 @@ require_once __DIR__ . '/../../includes/header.php';
       <h5><i class="fa-solid fa-pen-to-square"></i> Edit Doctor</h5>
       <button class="modal-close" data-modal-close="editDoctorModal"><i class="fa-solid fa-xmark"></i></button>
     </div>
-    <form method="post" action="<?= BASE_URL ?>/actions/admin/save-doctor.php">
+    <form method="post" action="<?= BASE_URL ?>/actions/admin/save-doctor.php" onsubmit="return validateDoctorForm('edit')">
       <?= $csrf ?>
       <input type="hidden" name="id" id="editDocId" value="">
       <div class="modal-body">
@@ -210,8 +309,51 @@ require_once __DIR__ . '/../../includes/header.php';
           <input type="text" class="form-control" name="specialty" id="editDocSpecialty" required />
         </div>
         <div class="form-group">
-          <label class="form-label">Schedule</label>
-          <input type="text" class="form-control" name="schedule" id="editDocSchedule" required />
+          <label class="form-label">Duty Schedule *</label>
+          <div style="margin-bottom:8px;">
+            <select class="form-select" id="editSchedulePreset" onchange="applySchedulePreset('edit')">
+              <option value="">-- Choose Quick Preset or Pick Days Below --</option>
+              <option value="Mon-Sat">Monday to Saturday (Mon-Sat)</option>
+              <option value="Mon-Fri">Monday to Friday (Mon-Fri)</option>
+              <option value="Mon-Wed-Fri">Monday, Wednesday, Friday (Mon-Wed-Fri)</option>
+              <option value="Tue-Thu">Tuesday, Thursday (Tue-Thu)</option>
+              <option value="Mon-Thu">Monday to Thursday (Mon-Thu)</option>
+              <option value="Wed-Fri">Wednesday, Friday (Wed-Fri)</option>
+              <option value="Tue-Fri">Tuesday to Friday (Tue-Fri)</option>
+              <option value="Sat">Saturday Only (Sat)</option>
+              <option value="custom">Custom Days Selection</option>
+            </select>
+          </div>
+          <div class="day-selector-group" id="editDaySelectorGroup">
+            <label class="day-chip" id="editChip_Mon">
+              <input type="checkbox" name="schedule_days[]" value="Mon" onchange="syncScheduleFromDays('edit')">
+              <span>Mon</span>
+            </label>
+            <label class="day-chip" id="editChip_Tue">
+              <input type="checkbox" name="schedule_days[]" value="Tue" onchange="syncScheduleFromDays('edit')">
+              <span>Tue</span>
+            </label>
+            <label class="day-chip" id="editChip_Wed">
+              <input type="checkbox" name="schedule_days[]" value="Wed" onchange="syncScheduleFromDays('edit')">
+              <span>Wed</span>
+            </label>
+            <label class="day-chip" id="editChip_Thu">
+              <input type="checkbox" name="schedule_days[]" value="Thu" onchange="syncScheduleFromDays('edit')">
+              <span>Thu</span>
+            </label>
+            <label class="day-chip" id="editChip_Fri">
+              <input type="checkbox" name="schedule_days[]" value="Fri" onchange="syncScheduleFromDays('edit')">
+              <span>Fri</span>
+            </label>
+            <label class="day-chip" id="editChip_Sat">
+              <input type="checkbox" name="schedule_days[]" value="Sat" onchange="syncScheduleFromDays('edit')">
+              <span>Sat</span>
+            </label>
+          </div>
+          <div class="schedule-preview-badge empty" id="editScheduleBadge">
+            <i class="fa-solid fa-calendar-days"></i> Selected: <strong id="editScheduleText" style="margin-left:4px;">None selected</strong>
+          </div>
+          <input type="hidden" name="schedule" id="editDocSchedule" required />
         </div>
         <div class="form-group">
           <label class="form-label">Availability</label>
@@ -232,6 +374,183 @@ require_once __DIR__ . '/../../includes/header.php';
 <?php
 $extraScripts = <<<'SCRIPTS'
 <script>
+  const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+  const PRESET_MAP = {
+    'Mon-Sat': ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
+    'Mon-Fri': ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
+    'Mon-Wed-Fri': ['Mon', 'Wed', 'Fri'],
+    'Tue-Thu': ['Tue', 'Thu'],
+    'Mon-Thu': ['Mon', 'Tue', 'Wed', 'Thu'],
+    'Wed-Fri': ['Wed', 'Fri'],
+    'Tue-Fri': ['Tue', 'Wed', 'Thu', 'Fri'],
+    'Sat': ['Sat']
+  };
+
+  function applySchedulePreset(prefix) {
+    const presetSelect = document.getElementById(prefix + 'SchedulePreset');
+    const presetVal = presetSelect.value;
+    if (!presetVal || presetVal === 'custom') {
+      return;
+    }
+    const targetDays = PRESET_MAP[presetVal] || [];
+    setDaysSelection(prefix, targetDays, presetVal);
+  }
+
+  function syncScheduleFromDays(prefix) {
+    const group = document.getElementById(prefix + 'DaySelectorGroup');
+    const checkedBoxes = Array.from(group.querySelectorAll('input[type="checkbox"]:checked'));
+    const checkedDays = checkedBoxes.map(cb => cb.value);
+
+    // Update visual .checked class on chips for cross-browser styling
+    WEEKDAYS.forEach(day => {
+      const chip = document.getElementById(prefix + 'Chip_' + day);
+      if (chip) {
+        const cb = chip.querySelector('input[type="checkbox"]');
+        if (cb && cb.checked) {
+          chip.classList.add('checked');
+        } else {
+          chip.classList.remove('checked');
+        }
+      }
+    });
+
+    const badge = document.getElementById(prefix + 'ScheduleBadge');
+    const textEl = document.getElementById(prefix + 'ScheduleText');
+    const hiddenInput = document.getElementById(prefix + 'DocSchedule');
+    const presetSelect = document.getElementById(prefix + 'SchedulePreset');
+
+    if (checkedDays.length === 0) {
+      hiddenInput.value = '';
+      textEl.textContent = 'None selected';
+      badge.className = 'schedule-preview-badge empty';
+      presetSelect.value = '';
+      return;
+    }
+
+    // Detect matching preset
+    let matchedPreset = 'custom';
+    for (const [key, days] of Object.entries(PRESET_MAP)) {
+      if (days.length === checkedDays.length && days.every((d, i) => d === checkedDays[i])) {
+        matchedPreset = key;
+        break;
+      }
+    }
+
+    let formattedSchedule = '';
+    if (matchedPreset !== 'custom') {
+      formattedSchedule = matchedPreset;
+      presetSelect.value = matchedPreset;
+    } else {
+      formattedSchedule = checkedDays.join('-');
+      presetSelect.value = 'custom';
+    }
+
+    hiddenInput.value = formattedSchedule;
+    textEl.textContent = formattedSchedule;
+    badge.className = 'schedule-preview-badge';
+  }
+
+  function setDaysSelection(prefix, days, fallbackStr) {
+    WEEKDAYS.forEach(day => {
+      const chip = document.getElementById(prefix + 'Chip_' + day);
+      if (chip) {
+        const cb = chip.querySelector('input[type="checkbox"]');
+        const isChecked = days.includes(day);
+        if (cb) cb.checked = isChecked;
+        if (isChecked) {
+          chip.classList.add('checked');
+        } else {
+          chip.classList.remove('checked');
+        }
+      }
+    });
+
+    const badge = document.getElementById(prefix + 'ScheduleBadge');
+    const textEl = document.getElementById(prefix + 'ScheduleText');
+    const hiddenInput = document.getElementById(prefix + 'DocSchedule');
+    const presetSelect = document.getElementById(prefix + 'SchedulePreset');
+
+    // Find if days match preset
+    let matchedPreset = 'custom';
+    for (const [key, pDays] of Object.entries(PRESET_MAP)) {
+      if (pDays.length === days.length && pDays.every((d, i) => d === days[i])) {
+        matchedPreset = key;
+        break;
+      }
+    }
+
+    let finalSchedule = '';
+    if (matchedPreset !== 'custom') {
+      finalSchedule = matchedPreset;
+      presetSelect.value = matchedPreset;
+    } else if (days.length > 0) {
+      finalSchedule = days.join('-');
+      presetSelect.value = 'custom';
+    } else {
+      finalSchedule = fallbackStr || '';
+      presetSelect.value = '';
+    }
+
+    hiddenInput.value = finalSchedule;
+    if (finalSchedule) {
+      textEl.textContent = finalSchedule;
+      badge.className = 'schedule-preview-badge';
+    } else {
+      textEl.textContent = 'None selected';
+      badge.className = 'schedule-preview-badge empty';
+    }
+  }
+
+  function parseScheduleStringToDays(schedStr) {
+    if (!schedStr) return [];
+    const s = schedStr.trim();
+    const lower = s.toLowerCase();
+
+    // Check Monday to Saturday
+    if (lower.includes('mon') && (lower.includes('sat') || lower.includes('saturday')) && (lower.includes('to') || lower.includes('-'))) {
+      return ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    }
+    // Check Monday to Friday
+    if (lower.includes('mon') && (lower.includes('fri') || lower.includes('friday')) && (lower.includes('to') || lower.includes('-'))) {
+      return ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
+    }
+    // Check Monday to Thursday
+    if (lower.includes('mon') && lower.includes('thu') && (lower.includes('to') || lower.includes('-')) && !lower.includes('wed') && !lower.includes('fri')) {
+      return ['Mon', 'Tue', 'Wed', 'Thu'];
+    }
+    // Check Tuesday to Friday
+    if (lower.includes('tue') && lower.includes('fri') && (lower.includes('to') || lower.includes('-')) && !lower.includes('thu')) {
+      return ['Tue', 'Wed', 'Thu', 'Fri'];
+    }
+
+    // Parse discrete days
+    const detected = [];
+    if (lower.includes('mon')) detected.push('Mon');
+    if (lower.includes('tue')) detected.push('Tue');
+    if (lower.includes('wed')) detected.push('Wed');
+    if (lower.includes('thu')) detected.push('Thu');
+    if (lower.includes('fri')) detected.push('Fri');
+    if (lower.includes('sat')) detected.push('Sat');
+    return detected;
+  }
+
+  function validateDoctorForm(prefix) {
+    const hiddenInput = document.getElementById(prefix + 'DocSchedule');
+    if (!hiddenInput || !hiddenInput.value || hiddenInput.value.trim() === '') {
+      alert('Please select at least one clinic duty day for the doctor schedule.');
+      return false;
+    }
+    return true;
+  }
+
+  function prepareAddDoctorModal() {
+    const preset = document.getElementById('addSchedulePreset');
+    if (preset) preset.value = '';
+    setDaysSelection('add', [], '');
+    openModal('addDoctorModal');
+  }
+
   function filterDoctors() {
     const search = document.getElementById("searchDoctor").value.toLowerCase();
     document.querySelectorAll("#doctorTable tr[data-search]").forEach(row => {
@@ -243,14 +562,17 @@ $extraScripts = <<<'SCRIPTS'
     document.getElementById("editDocId").value       = doc.id;
     document.getElementById("editDocName").value     = doc.name;
     document.getElementById("editDocSpecialty").value = doc.specialty;
-    document.getElementById("editDocSchedule").value = doc.schedule;
     document.getElementById("editDocAvailable").value = doc.available ? "1" : "0";
+    
+    const parsedDays = parseScheduleStringToDays(doc.schedule);
+    setDaysSelection('edit', parsedDays, doc.schedule);
+
     openModal("editDoctorModal");
   }
 
   // Auto-open add modal if redirected back with error on add
-  <?php if ($errorMsg && !isset($_POST['id'])): ?>
-  document.addEventListener("DOMContentLoaded", () => openModal("addDoctorModal"));
+  <?php if ($flashError && !isset($_POST['id'])): ?>
+  document.addEventListener("DOMContentLoaded", () => prepareAddDoctorModal());
   <?php endif; ?>
 </script>
 SCRIPTS;

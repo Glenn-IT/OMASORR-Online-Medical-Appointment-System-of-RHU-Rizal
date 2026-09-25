@@ -16,8 +16,33 @@ $specialty = trim($_POST['specialty']      ?? '');
 $schedule  = trim($_POST['schedule']       ?? '');
 $available = isset($_POST['available']) ? (int)(bool)$_POST['available'] : 1;
 
+// Fallback: If schedule string is empty but schedule_days array was submitted
+if (!$schedule && !empty($_POST['schedule_days']) && is_array($_POST['schedule_days'])) {
+    $validDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    $selectedDays = array_values(array_intersect($validDays, $_POST['schedule_days']));
+    if (!empty($selectedDays)) {
+        if ($selectedDays === ['Mon', 'Tue', 'Wed', 'Thu', 'Fri']) {
+            $schedule = 'Mon-Fri';
+        } elseif ($selectedDays === ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']) {
+            $schedule = 'Mon-Sat';
+        } elseif ($selectedDays === ['Mon', 'Tue', 'Wed', 'Thu']) {
+            $schedule = 'Mon-Thu';
+        } elseif ($selectedDays === ['Tue', 'Wed', 'Thu', 'Fri']) {
+            $schedule = 'Tue-Fri';
+        } elseif ($selectedDays === ['Wed', 'Fri']) {
+            $schedule = 'Wed-Fri';
+        } elseif ($selectedDays === ['Tue', 'Thu']) {
+            $schedule = 'Tue-Thu';
+        } elseif ($selectedDays === ['Mon', 'Wed', 'Fri']) {
+            $schedule = 'Mon-Wed-Fri';
+        } else {
+            $schedule = implode('-', $selectedDays);
+        }
+    }
+}
+
 if (!$name || !$specialty || !$schedule) {
-    flashMessage('doctor_error', 'Please fill in all required fields.', 'danger');
+    flashMessage('doctor_error', 'Please fill in all required fields and select at least one clinic duty day.', 'danger');
     redirectTo('/views/admin/doctors.php');
 }
 

@@ -247,7 +247,7 @@ All patients represent realistic municipal residents with unique ID series (`P-0
 * **Screen Display:** [views/admin/doctors.php](file:///C:/xampp/htdocs/rhu-appointment-system/views/admin/doctors.php) and [views/admin/calendar.php](file:///C:/xampp/htdocs/rhu-appointment-system/views/admin/calendar.php)
 * **Estimated Time:** 1.0 minute
 * **Screen Action:**
-  1. On the Doctors page, demonstrate how administrators can add new doctors, assign clinic duty days, and toggle availability on/off with an instant switch.
+  1. On the Doctors page, demonstrate adding or editing a doctor: highlight how schedule assignment eliminates error-prone typing through interactive weekday selection chips (`Mon`-`Sat`) and quick presets (`Monday to Saturday`, `Mon-Fri`, `Mon-Wed-Fri`), with live badge previews. Show instant availability toggling on/off.
   2. Switch to **Master Calendar** ([views/admin/calendar.php](file:///C:/xampp/htdocs/rhu-appointment-system/views/admin/calendar.php)) to view district-wide booked appointments plotted across the monthly grid.
 * **🗣️ Verbal Script:**
   > *"Administrators manage the clinic roster in [views/admin/doctors.php](file:///C:/xampp/htdocs/rhu-appointment-system/views/admin/doctors.php). If a doctor goes on emergency leave or attends a municipal medical mission, toggling their status immediately deactivates them from the patient booking calendar.
