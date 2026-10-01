@@ -21,7 +21,8 @@ $base = '/rhu-appointment-system';
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
   <title><?= htmlspecialchars($pageTitle ?? 'RHU Rizal Appointment System') ?></title>
-  <link rel="stylesheet" href="<?= $base ?>/assets/css/style.css" />
+  <?php $cssVersion = file_exists(__DIR__ . '/../assets/css/style.css') ? filemtime(__DIR__ . '/../assets/css/style.css') : '1.0'; ?>
+  <link rel="stylesheet" href="<?= $base ?>/assets/css/style.css?v=<?= $cssVersion ?>" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
   <?= $extraHead ?? '' ?>
 </head>

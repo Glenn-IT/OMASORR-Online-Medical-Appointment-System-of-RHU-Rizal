@@ -95,7 +95,7 @@ require_once __DIR__ . '/includes/header.php';
 
         <div class="section-divider mt-3">or</div>
 
-        <a href="<?= $base ?>/views/user/signup.php" class="btn btn-outline-primary btn-block" style="text-align:center;justify-content:center;">
+        <a href="<?= $base ?>/views/user/signup.php" class="btn btn-outline-primary btn-block" style="text-align:center;justify-content:center;" onclick="this.href='<?= $base ?>/views/user/signup.php?_t=' + Date.now();">
           <i class="fa-solid fa-user-plus"></i> Create New Account
         </a>
 

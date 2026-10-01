@@ -12,15 +12,15 @@ $base = '/rhu-appointment-system';
 ?>
   <div id="toast-container"></div>
 
-  <script src="<?= $base ?>/assets/js/app.js"></script>
+  <?php $jsVersion = file_exists(__DIR__ . '/../assets/js/app.js') ? filemtime(__DIR__ . '/../assets/js/app.js') : '1.0'; ?>
+  <script src="<?= $base ?>/assets/js/app.js?v=<?= $jsVersion ?>"></script>
   <?= $extraScripts ?? '' ?>
 
   <script>
     // Force a server round-trip when the browser restores a page from
-    // bfcache (Back-Forward Cache). Without this, clicking Back after
-    // logout returns the cached dashboard snapshot bypassing session checks.
+    // bfcache (Back-Forward Cache) or history navigation.
     window.addEventListener('pageshow', function (e) {
-      if (e.persisted) {
+      if (e.persisted || (window.performance && window.performance.getEntriesByType('navigation')[0]?.type === 'back_forward')) {
         window.location.reload();
       }
     });

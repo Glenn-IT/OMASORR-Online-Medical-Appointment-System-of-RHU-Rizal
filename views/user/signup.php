@@ -1,4 +1,9 @@
 <?php
+// Prevent any caching of the registration page - force fresh response on every open
+header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+header('Pragma: no-cache');
+header('Expires: Sat, 01 Jan 2000 00:00:00 GMT');
+
 require_once __DIR__ . '/../../config/config.php';
 require_once __DIR__ . '/../../config/auth.php';
 
@@ -67,17 +72,17 @@ require_once __DIR__ . '/../../includes/header.php';
         <div class="form-row">
           <div class="form-group">
             <label class="form-label">First Name *</label>
-            <input type="text" class="form-control" id="firstName" name="first_name" placeholder="Juan" value="<?= htmlspecialchars($_POST['first_name'] ?? '') ?>" />
+            <input type="text" class="form-control" id="firstName" name="first_name" placeholder="Juan" value="<?= htmlspecialchars($_POST['first_name'] ?? '') ?>" autocomplete="off" />
           </div>
           <div class="form-group">
             <label class="form-label">Last Name *</label>
-            <input type="text" class="form-control" id="lastName" name="last_name" placeholder="Dela Cruz" value="<?= htmlspecialchars($_POST['last_name'] ?? '') ?>" />
+            <input type="text" class="form-control" id="lastName" name="last_name" placeholder="Dela Cruz" value="<?= htmlspecialchars($_POST['last_name'] ?? '') ?>" autocomplete="off" />
           </div>
         </div>
         <div class="form-row">
           <div class="form-group">
             <label class="form-label">Date of Birth *</label>
-            <input type="date" class="form-control" id="birthdate" name="birthdate" value="<?= htmlspecialchars($_POST['birthdate'] ?? '') ?>" max="<?= date('Y-m-d') ?>" />
+            <input type="date" class="form-control" id="birthdate" name="birthdate" value="<?= htmlspecialchars($_POST['birthdate'] ?? '') ?>" max="<?= date('Y-m-d') ?>" autocomplete="off" />
           </div>
           <div class="form-group">
             <label class="form-label">Age</label>
@@ -87,7 +92,7 @@ require_once __DIR__ . '/../../includes/header.php';
         <div class="form-row">
           <div class="form-group">
             <label class="form-label">Gender *</label>
-            <select class="form-select" id="gender" name="gender">
+            <select class="form-select" id="gender" name="gender" autocomplete="off">
               <option value="">-- Select --</option>
               <option value="Male"   <?= ($_POST['gender'] ?? '') === 'Male'   ? 'selected' : '' ?>>Male</option>
               <option value="Female" <?= ($_POST['gender'] ?? '') === 'Female' ? 'selected' : '' ?>>Female</option>
@@ -96,7 +101,7 @@ require_once __DIR__ . '/../../includes/header.php';
           </div>
           <div class="form-group">
             <label class="form-label">Blood Type</label>
-            <select class="form-select" id="bloodType" name="blood_type">
+            <select class="form-select" id="bloodType" name="blood_type" autocomplete="off">
               <option value="">-- Select --</option>
               <?php foreach (['A+','A-','B+','B-','O+','O-','AB+','AB-','Unknown'] as $bt): ?>
               <option <?= ($_POST['blood_type'] ?? '') === $bt ? 'selected' : '' ?>><?= $bt ?></option>
@@ -109,14 +114,14 @@ require_once __DIR__ . '/../../includes/header.php';
             <label class="form-label">Phone Number *</label>
             <div class="input-group">
               <i class="fa-solid fa-phone input-icon"></i>
-              <input type="tel" class="form-control" id="phone" name="phone" placeholder="09XXXXXXXXX" maxlength="11" value="<?= htmlspecialchars($_POST['phone'] ?? '') ?>" />
+              <input type="tel" class="form-control" id="phone" name="phone" placeholder="09XXXXXXXXX" maxlength="11" value="<?= htmlspecialchars($_POST['phone'] ?? '') ?>" autocomplete="off" />
             </div>
             <p class="form-hint" id="phoneHint">Must be 11 digits starting with 09 (e.g. 09123456789)</p>
           </div>
         </div>
         <div class="form-group">
           <label class="form-label">Complete Address *</label>
-          <input type="text" class="form-control" id="address" name="address" placeholder="Brgy., Municipality, Province" value="<?= htmlspecialchars($_POST['address'] ?? '') ?>" />
+          <input type="text" class="form-control" id="address" name="address" placeholder="Brgy., Municipality, Province" value="<?= htmlspecialchars($_POST['address'] ?? '') ?>" autocomplete="off" />
         </div>
         <button type="button" class="btn btn-primary btn-block" onclick="goToStep2()">
           Next <i class="fa-solid fa-arrow-right"></i>
@@ -129,7 +134,7 @@ require_once __DIR__ . '/../../includes/header.php';
           <label class="form-label">Email Address *</label>
           <div class="input-group">
             <i class="fa-solid fa-envelope input-icon"></i>
-            <input type="email" class="form-control" id="email" name="email" placeholder="you@email.com" value="<?= htmlspecialchars($_POST['email'] ?? '') ?>" />
+            <input type="email" class="form-control" id="email" name="email" placeholder="you@email.com" value="<?= htmlspecialchars($_POST['email'] ?? '') ?>" autocomplete="off" />
           </div>
           <p class="form-hint" id="emailHint" style="display:none;color:var(--danger)">Please enter a valid email address (e.g. user@example.com)</p>
         </div>
@@ -137,7 +142,7 @@ require_once __DIR__ . '/../../includes/header.php';
           <label class="form-label">Username *</label>
           <div class="input-group">
             <i class="fa-solid fa-user input-icon"></i>
-            <input type="text" class="form-control" id="regUsername" name="username" placeholder="Choose a username" value="<?= htmlspecialchars($_POST['username'] ?? '') ?>" />
+            <input type="text" class="form-control" id="regUsername" name="username" placeholder="Choose a username" value="<?= htmlspecialchars($_POST['username'] ?? '') ?>" autocomplete="off" />
           </div>
           <p class="form-hint">Username must be at least 4 characters, no spaces.</p>
         </div>
@@ -145,7 +150,7 @@ require_once __DIR__ . '/../../includes/header.php';
           <label class="form-label">Password *</label>
           <div class="input-group">
             <i class="fa-solid fa-lock input-icon"></i>
-            <input type="password" class="form-control" id="regPassword" name="password" placeholder="At least 8 characters" />
+            <input type="password" class="form-control" id="regPassword" name="password" placeholder="At least 8 characters" autocomplete="new-password" />
             <i class="fa-solid fa-eye input-icon-right" id="toggleRegPwd" style="pointer-events:all;cursor:pointer" title="Show/hide password"></i>
           </div>
         </div>
@@ -153,7 +158,7 @@ require_once __DIR__ . '/../../includes/header.php';
           <label class="form-label">Confirm Password *</label>
           <div class="input-group">
             <i class="fa-solid fa-shield-halved input-icon"></i>
-            <input type="password" class="form-control" id="confirmPassword" name="confirm_password" placeholder="Repeat password" />
+            <input type="password" class="form-control" id="confirmPassword" name="confirm_password" placeholder="Repeat password" autocomplete="new-password" />
             <i class="fa-solid fa-eye input-icon-right" id="toggleConfirmPwd" style="pointer-events:all;cursor:pointer" title="Show/hide password"></i>
           </div>
         </div>
@@ -205,6 +210,70 @@ require_once __DIR__ . '/../../includes/header.php';
 <?php
 $extraScripts = <<<'JS'
 <script>
+  // ── Hard reset form & fresh state on open ─────────────────
+  function hardResetRegistration() {
+    const hasFlashError = !!document.querySelector('.alert.alert-danger');
+    if (hasFlashError) return;
+
+    const form = document.getElementById('signupForm');
+    if (form) form.reset();
+
+    const fieldIds = [
+      'firstName', 'lastName', 'birthdate', 'age',
+      'phone', 'address', 'email', 'regUsername',
+      'regPassword', 'confirmPassword'
+    ];
+    fieldIds.forEach((id) => {
+      const el = document.getElementById(id);
+      if (el) el.value = '';
+    });
+
+    const gender = document.getElementById('gender');
+    if (gender) gender.selectedIndex = 0;
+    const bloodType = document.getElementById('bloodType');
+    if (bloodType) bloodType.selectedIndex = 0;
+    const agree = document.getElementById('agreeTerms');
+    if (agree) agree.checked = false;
+
+    // Reset step wizard views
+    const s1 = document.getElementById('step1');
+    const s2 = document.getElementById('step2');
+    const s3 = document.getElementById('step3');
+    if (s1) s1.style.display = 'block';
+    if (s2) s2.style.display = 'none';
+    if (s3) s3.style.display = 'none';
+
+    // Reset step indicators
+    const ind1 = document.getElementById('step1Indicator');
+    const ind2 = document.getElementById('step2Indicator');
+    const ind3 = document.getElementById('step3Indicator');
+    if (ind1) ind1.className = 'step active';
+    if (ind2) ind2.className = 'step';
+    if (ind3) ind3.className = 'step';
+
+    // Reset hints and submit button
+    const emailHint = document.getElementById('emailHint');
+    if (emailHint) emailHint.style.display = 'none';
+    const phoneHint = document.getElementById('phoneHint');
+    if (phoneHint) phoneHint.style.color = '';
+    const btn = document.getElementById('submitBtn');
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa-solid fa-user-check"></i> Create Account';
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', hardResetRegistration);
+
+  // If opened via bfcache or browser history navigation, force hard reload from server
+  window.addEventListener('pageshow', function (e) {
+    if (e.persisted || (window.performance && window.performance.getEntriesByType('navigation')[0]?.type === 'back_forward')) {
+      window.location.reload();
+    } else {
+      hardResetRegistration();
+    }
+  });
+
   // ── Age auto-calculation ──────────────────────────────────
   function calculateAge(dob) {
     if (!dob) return '';

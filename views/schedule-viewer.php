@@ -418,7 +418,7 @@ require_once __DIR__ . '/../includes/header.php';
         <a href="<?= BASE_URL ?>/index.php" class="btn btn-outline-primary btn-sm">
           <i class="fa-solid fa-right-to-bracket"></i> Patient Sign In
         </a>
-        <a href="<?= BASE_URL ?>/views/user/signup.php" class="btn btn-primary btn-sm">
+        <a href="<?= BASE_URL ?>/views/user/signup.php" class="btn btn-primary btn-sm" onclick="this.href='<?= BASE_URL ?>/views/user/signup.php?_t=' + Date.now();">
           <i class="fa-solid fa-user-plus"></i> Create Account
         </a>
       <?php endif; ?>
@@ -732,7 +732,7 @@ require_once __DIR__ . '/../includes/header.php';
         <a id="modalSignInBtn" href="<?= BASE_URL ?>/index.php" class="btn btn-primary btn-block">
           <i class="fa-solid fa-right-to-bracket"></i> Sign In to Confirm Slot
         </a>
-        <a href="<?= BASE_URL ?>/views/user/signup.php" class="btn btn-outline-primary btn-block">
+        <a href="<?= BASE_URL ?>/views/user/signup.php" class="btn btn-outline-primary btn-block" onclick="this.href='<?= BASE_URL ?>/views/user/signup.php?_t=' + Date.now();">
           <i class="fa-solid fa-user-plus"></i> Create Free Patient Account
         </a>
       </div>
