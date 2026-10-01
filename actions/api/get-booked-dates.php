@@ -9,12 +9,60 @@ $date     = $_GET['date'] ?? '';
 $doctorId = (int) ($_GET['doctor_id'] ?? 0);
 
 if (!$date || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
-    echo json_encode(['booked_times' => []]);
+    echo json_encode(['booked_times' => [], 'past_times' => [], 'is_closed' => false]);
+    exit;
+}
+
+// RHU is only open on weekdays (Monday to Friday); weekends (Saturday & Sunday) are closed
+if (!isClinicOpenDate($date)) {
+    echo json_encode([
+        'booked_times'  => [],
+        'past_times'    => [],
+        'is_closed'     => true,
+        'is_weekend'    => true,
+        'closed_reason' => 'The RHU is closed on weekends (Saturday and Sunday). Regular clinic hours are Monday to Friday, 8:00 AM – 5:00 PM.'
+    ]);
     exit;
 }
 
 try {
     $pdo = db();
+
+    // Check doctor duty schedule if a specific doctor is requested
+    if ($doctorId > 0) {
+        $docStmt = $pdo->prepare("SELECT name, schedule, available FROM doctors WHERE id = ? LIMIT 1");
+        $docStmt->execute([$doctorId]);
+        $doctor = $docStmt->fetch();
+        if ($doctor) {
+            $docName = $doctor['name'];
+            if (!preg_match('/^Dr\.?/i', $docName)) {
+                $docName = 'Dr. ' . $docName;
+            }
+            if (!(int)$doctor['available']) {
+                echo json_encode([
+                    'booked_times'  => [],
+                    'past_times'    => [],
+                    'is_closed'     => true,
+                    'doctor_off'    => true,
+                    'closed_reason' => "{$docName} is currently unavailable / on leave."
+                ]);
+                exit;
+            }
+            if (!isDoctorOnDuty($doctor['schedule'] ?? '', $date)) {
+                $dayName = date('l', strtotime($date));
+                $dutyDays = implode(', ', parseDoctorScheduleDays($doctor['schedule'] ?? ''));
+                echo json_encode([
+                    'booked_times'  => [],
+                    'past_times'    => [],
+                    'is_closed'     => true,
+                    'doctor_off'    => true,
+                    'closed_reason' => "{$docName} is not on duty on {$dayName}. Regular schedule: {$dutyDays}."
+                ]);
+                exit;
+            }
+        }
+    }
+
     if ($doctorId > 0) {
         $stmt = $pdo->prepare("
             SELECT time FROM appointments
@@ -45,10 +93,12 @@ try {
     }
 
     echo json_encode([
-        'booked_times' => $times,
-        'past_times'   => $pastTimes,
-        'is_today'     => ($date === date('Y-m-d')),
-        'server_time'  => date('H:i')
+        'booked_times'  => $times,
+        'past_times'    => $pastTimes,
+        'is_closed'     => false,
+        'is_weekend'    => false,
+        'is_today'      => ($date === date('Y-m-d')),
+        'server_time'   => date('H:i')
     ]);
 } catch (RuntimeException $e) {
     echo json_encode(['booked_times' => [], 'past_times' => [], 'error' => 'Server error']);

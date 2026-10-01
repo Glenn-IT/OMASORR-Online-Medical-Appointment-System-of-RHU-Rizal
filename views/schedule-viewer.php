@@ -440,7 +440,7 @@ require_once __DIR__ . '/../includes/header.php';
 
     <div class="hero-chips">
       <div class="hero-chip">
-        <i class="fa-regular fa-clock"></i> <strong>Clinic Hours:</strong> Mon – Fri: 8:00 AM – 5:00 PM
+        <i class="fa-regular fa-clock"></i> <strong>Clinic Hours:</strong> Mon – Fri: 8:00 AM – 5:00 PM (Weekends Closed)
       </div>
       <div class="hero-chip">
         <i class="fa-solid fa-location-dot"></i> RHU Rizal Health Center, Poblacion, Rizal
@@ -525,8 +525,15 @@ require_once __DIR__ . '/../includes/header.php';
         <select class="form-select" id="doctorFilter">
           <option value="0">All Available Doctors</option>
           <?php foreach ($doctors as $doc): ?>
-            <option value="<?= $doc['id'] ?>" data-schedule="<?= htmlspecialchars($doc['schedule'] ?? '') ?>" <?= $doc['available'] ? '' : 'disabled' ?>>
-              <?= htmlspecialchars($doc['name']) ?> – <?= htmlspecialchars($doc['specialty']) ?> <?= $doc['available'] ? '' : '(Unavailable)' ?>
+            <?php 
+              $schedDays = parseDoctorScheduleDays($doc['schedule'] ?? '');
+              $schedText = implode(', ', $schedDays);
+            ?>
+            <option value="<?= $doc['id'] ?>" 
+                    data-schedule="<?= htmlspecialchars($doc['schedule'] ?? 'Mon-Fri') ?>" 
+                    data-days='<?= htmlspecialchars(json_encode($schedDays), ENT_QUOTES, 'UTF-8') ?>' 
+                    <?= $doc['available'] ? '' : 'disabled' ?>>
+              <?= htmlspecialchars($doc['name']) ?> – <?= htmlspecialchars($doc['specialty']) ?> (<?= htmlspecialchars($schedText) ?>) <?= $doc['available'] ? '' : '(Unavailable)' ?>
             </option>
           <?php endforeach; ?>
         </select>
@@ -847,6 +854,7 @@ require_once __DIR__ . '/../includes/header.php';
     const dayOfWeek = dateObj.getDay(); // 0 = Sunday, 6 = Saturday
     const isSunday = (dayOfWeek === 0);
     const isSaturday = (dayOfWeek === 6);
+    const isWeekend = isSunday || isSaturday;
     const isHoliday = HOLIDAYS.includes(dateVal);
 
     // Format date string
@@ -858,24 +866,56 @@ require_once __DIR__ . '/../includes/header.php';
     });
     dateDisplay.textContent = formattedDate;
 
-    // Check closed status
-    if (isSunday || isHoliday) {
-      const reason = isSunday ? 'Clinic is closed on Sundays.' : 'Clinic is closed for an official holiday.';
-      dateSubText.textContent = reason;
+    // Check closed status (Weekends & Holidays)
+    if (isWeekend || isHoliday) {
+      const reason = isWeekend 
+        ? 'The RHU is closed on weekends (Saturday and Sunday).' 
+        : 'The RHU is closed for an official holiday.';
+      dateSubText.textContent = reason + ' Regular clinic hours: Monday to Friday, 8:00 AM – 5:00 PM.';
       badgeContainer.innerHTML = '<span class="badge badge-danger" style="font-size:12px;padding:6px 12px;"><i class="fa-solid fa-lock"></i> Clinic Closed</span>';
       
       container.innerHTML = `
         <div style="grid-column:1/-1;text-align:center;padding:40px 20px;background:#fdf2e9;border-radius:10px;border:1px solid #f5cba7;">
           <i class="fa-solid fa-calendar-xmark text-danger" style="font-size:32px;margin-bottom:10px;"></i>
           <h4 style="color:#b9770e;margin-bottom:6px;">Clinic Closed on this Date</h4>
-          <p style="color:var(--gray-700);margin:0 0 16px;font-size:13px;">${reason} Please select a weekday (Monday to Friday) to view open appointment slots.</p>
+          <p style="color:var(--gray-700);margin:0 0 16px;font-size:13px;">${reason} Regular consultation hours are Monday to Friday, 8:00 AM – 5:00 PM. Please select a weekday to view open appointment slots.</p>
           <button type="button" class="btn btn-primary btn-sm" onclick="setNextWeekday()"><i class="fa-regular fa-calendar-plus"></i> View Next Clinic Day</button>
         </div>
       `;
       return;
     }
 
-    dateSubText.textContent = isSaturday ? 'Saturday: Emergency and special scheduled consultations only.' : 'Regular clinic hours: 8:00 AM – 5:00 PM.';
+    // Check doctor duty days if a specific doctor is selected
+    const selectedDoctorOpt = doctorInput.options[doctorInput.selectedIndex];
+    let doctorDutyDays = null;
+    if (doctorId > 0 && selectedDoctorOpt) {
+      try {
+        doctorDutyDays = JSON.parse(selectedDoctorOpt.getAttribute('data-days') || '[]');
+      } catch(e) {}
+    }
+
+    if (doctorDutyDays && doctorDutyDays.length > 0) {
+      const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+      const shortDay = dayNames[dayOfWeek];
+      if (!doctorDutyDays.includes(shortDay)) {
+        const docName = selectedDoctorOpt.text.split('–')[0].trim();
+        const fullDayName = dateObj.toLocaleDateString('en-US', { weekday: 'long' });
+        const reason = `${docName} is off duty on ${fullDayName}. Regular schedule: ${doctorDutyDays.join(', ')}.`;
+        dateSubText.textContent = reason;
+        badgeContainer.innerHTML = '<span class="badge badge-warning" style="font-size:12px;padding:6px 12px;background:#fff3cd;color:#856404;border:1px solid #ffeeba;"><i class="fa-solid fa-user-clock"></i> Doctor Off Duty</span>';
+        container.innerHTML = `
+          <div style="grid-column:1/-1;text-align:center;padding:40px 20px;background:#fff8e6;border-radius:10px;border:1px solid #ffe499;">
+            <i class="fa-solid fa-user-clock text-warning" style="font-size:32px;margin-bottom:10px;color:#d97706;"></i>
+            <h4 style="color:#92400e;margin-bottom:6px;">Doctor Off Duty</h4>
+            <p style="color:var(--gray-700);margin:0 0 16px;font-size:13px;">${reason} You may select another clinic day or choose "All Available Doctors" above.</p>
+            <button type="button" class="btn btn-outline-primary btn-sm" onclick="document.getElementById('doctorFilter').value='0';refreshSlots();"><i class="fa-solid fa-users"></i> View All Doctors</button>
+          </div>
+        `;
+        return;
+      }
+    }
+
+    dateSubText.textContent = 'Regular clinic hours: Monday to Friday, 8:00 AM – 5:00 PM.';
     container.innerHTML = `
       <div style="grid-column:1/-1;text-align:center;padding:30px;color:var(--gray-600);">
         <i class="fa-solid fa-spinner fa-spin fa-2x"></i>
@@ -888,6 +928,18 @@ require_once __DIR__ . '/../includes/header.php';
     try {
       const res = await fetch(`${BASE}/actions/api/get-booked-dates.php?date=${dateVal}&doctor_id=${doctorId}`);
       const data = await res.json();
+      if (data.is_closed) {
+        dateSubText.textContent = data.closed_reason || 'Clinic or doctor unavailable on this date.';
+        badgeContainer.innerHTML = `<span class="badge badge-danger" style="font-size:12px;padding:6px 12px;"><i class="fa-solid fa-lock"></i> ${data.doctor_off ? 'Doctor Off Duty' : 'Clinic Closed'}</span>`;
+        container.innerHTML = `
+          <div style="grid-column:1/-1;text-align:center;padding:40px 20px;background:#fdf2e9;border-radius:10px;border:1px solid #f5cba7;">
+            <i class="fa-solid fa-calendar-xmark text-danger" style="font-size:32px;margin-bottom:10px;"></i>
+            <h4 style="color:#b9770e;margin-bottom:6px;">${data.doctor_off ? 'Doctor Off Duty' : 'Clinic Closed'}</h4>
+            <p style="color:var(--gray-700);margin:0 0 16px;font-size:13px;">${data.closed_reason}</p>
+          </div>
+        `;
+        return;
+      }
       bookedTimes = data.booked_times || [];
       pastTimes   = data.past_times || [];
     } catch(e) {

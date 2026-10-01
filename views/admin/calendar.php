@@ -75,7 +75,7 @@ require_once __DIR__ . '/../../includes/header.php';
         <div style="display:flex;gap:12px;flex-wrap:wrap;">
           <div class="legend-item"><div class="legend-dot green"></div> Available</div>
           <div class="legend-item"><div class="legend-dot red"></div> Fully Booked</div>
-          <div class="legend-item"><div class="legend-dot gray"></div> Closed / Holiday</div>
+          <div class="legend-item"><div class="legend-dot gray"></div> Closed (Weekends / Holidays)</div>
           <div class="legend-item" style="background:#fef3cd;padding:3px 8px;border-radius:4px;font-size:11px;color:#856404;">Pending</div>
           <div class="legend-item" style="background:#d1e7dd;padding:3px 8px;border-radius:4px;font-size:11px;color:#0a5230;">Approved</div>
         </div>
@@ -135,11 +135,13 @@ $extraScripts = <<<SCRIPTS
       const dateStr = year + "-" + String(month+1).padStart(2,"0") + "-" + String(d).padStart(2,"0");
       const dateObj = new Date(year, month, d);
       const isSunday = dateObj.getDay() === 0;
+      const isSaturday = dateObj.getDay() === 6;
+      const isWeekend = isSunday || isSaturday;
       const isToday  = dateObj.getTime() === today.getTime();
       const dayAppts = ALL_APPTS.filter(a => a.date === dateStr);
 
       let cellClass = "big-cal-cell";
-      if (isSunday) cellClass += " closed-cell";
+      if (isWeekend) cellClass += " closed-cell";
       else if (dayAppts.length >= 4) cellClass += " booked-cell";
       else if (isToday) cellClass += " today-cell";
 
@@ -149,10 +151,10 @@ $extraScripts = <<<SCRIPTS
       }).join("");
       const moreHTML = dayAppts.length > 3 ? '<div class="cell-event" style="background:#e9ecef;color:#555;">+' + (dayAppts.length-3) + ' more</div>' : "";
 
-      html += '<div class="' + cellClass + '" onclick="' + (!isSunday ? "showDay('" + dateStr + "')" : "") + '">'
+      html += '<div class="' + cellClass + '" onclick="' + (!isWeekend ? "showDay('" + dateStr + "')" : (dayAppts.length > 0 ? "showDay('" + dateStr + "')" : "")) + '">'
             + '<div class="cell-date">' + d + (isToday ? ' <small style="font-size:9px;color:var(--primary);">TODAY</small>' : "") + '</div>'
             + eventsHTML + moreHTML
-            + (isSunday ? '<div style="font-size:10px;color:var(--gray-400);">Closed</div>' : "")
+            + (isWeekend ? '<div style="font-size:10px;color:var(--gray-400);">Closed (Weekend)</div>' : "")
             + '</div>';
     }
 

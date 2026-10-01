@@ -186,23 +186,46 @@ class RHUCalendar {
       const dateObj = new Date(year, month, d);
       const isSunday = dateObj.getDay() === 0;
       const isSaturday = dateObj.getDay() === 6;
+      const isWeekend = isSunday || isSaturday;
       const isPast = dateObj < this.today;
       const isToday = dateObj.getTime() === this.today.getTime();
       const isBooked = this.bookedDates.includes(dateStr);
-      const isClosed = this.closedDates.includes(dateStr) || isSunday;
-      const isSat = isSaturday;
+
+      // Check if custom filter / doctor duty day filter marks this date closed
+      let isOffDuty = false;
+      if (typeof this.options.isDateAvailable === 'function') {
+        isOffDuty = !this.options.isDateAvailable(dateStr, dateObj);
+      }
+
+      const isHolidayOrClosed = this.closedDates.includes(dateStr);
+      const isClosed = isWeekend || isHolidayOrClosed || isOffDuty;
       const isSelected = this.selectedDate === dateStr;
 
       let cls = "cal-day";
-      if (isPast) cls += " past";
-      else if (isClosed) cls += " closed";
-      else if (isBooked) cls += " booked";
-      else cls += " available";
+      let title = "";
+      if (isPast) {
+        cls += " past";
+        title = "Past date";
+      } else if (isWeekend) {
+        cls += " closed weekend";
+        title = "Closed on Weekends (Saturday & Sunday)";
+      } else if (isOffDuty) {
+        cls += " closed doctor-off";
+        title = "Doctor off duty on this day";
+      } else if (isHolidayOrClosed) {
+        cls += " closed holiday";
+        title = "Clinic closed / Holiday";
+      } else if (isBooked) {
+        cls += " booked";
+        title = "Fully booked";
+      } else {
+        cls += " available";
+        title = "Available for appointment";
+      }
       if (isToday) cls += " today";
       if (isSelected) cls += " selected";
-      if (isSat && !isPast && !isClosed) cls += " available";
 
-      daysHTML += `<div class="${cls}" data-date="${dateStr}">${d}</div>`;
+      daysHTML += `<div class="${cls}" data-date="${dateStr}" title="${title}">${d}</div>`;
     }
 
     this.container.innerHTML = `
@@ -221,7 +244,7 @@ class RHUCalendar {
         <div class="calendar-legend">
           <div class="legend-item"><div class="legend-dot green"></div> Available</div>
           <div class="legend-item"><div class="legend-dot red"></div> Fully Booked</div>
-          <div class="legend-item"><div class="legend-dot gray"></div> Closed</div>
+          <div class="legend-item"><div class="legend-dot gray"></div> Closed (Weekends/Holidays)</div>
           <div class="legend-item"><div class="legend-dot blue"></div> Selected</div>
         </div>
       </div>
@@ -237,22 +260,43 @@ class RHUCalendar {
       this.render();
     });
     this.container
-      .querySelectorAll(".cal-day.available, .cal-day.today")
+      .querySelectorAll(".cal-day")
       .forEach((day) => {
         day.addEventListener("click", () => {
           const d = day.dataset.date;
-          if (
-            !d ||
-            day.classList.contains("past") ||
-            day.classList.contains("closed") ||
-            day.classList.contains("booked")
-          )
+          if (!d || day.classList.contains("empty") || day.classList.contains("past")) return;
+          if (day.classList.contains("closed")) {
+            if (day.classList.contains("doctor-off")) {
+              showToast("The selected doctor is off duty on this day.", "warning");
+            } else if (day.classList.contains("weekend")) {
+              showToast("The RHU is closed on weekends (Saturday & Sunday). Please choose a weekday.", "warning");
+            } else {
+              showToast("The RHU is closed on this date.", "warning");
+            }
             return;
+          }
+          if (day.classList.contains("booked")) {
+            showToast("This date is fully booked.", "warning");
+            return;
+          }
           this.selectedDate = d;
           if (this.options.onSelect) this.options.onSelect(d);
           this.render();
         });
       });
+  }
+
+  setDoctorFilter(dutyDays) {
+    if (!dutyDays || dutyDays.length === 0) {
+      this.options.isDateAvailable = null;
+    } else {
+      const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+      this.options.isDateAvailable = (dateStr, dateObj) => {
+        const dayName = dayNames[dateObj.getDay()];
+        return dutyDays.includes(dayName);
+      };
+    }
+    this.render();
   }
 }
 

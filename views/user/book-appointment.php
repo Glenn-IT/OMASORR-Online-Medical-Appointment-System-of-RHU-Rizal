@@ -10,7 +10,7 @@ $initial  = strtoupper(mb_substr($fullName, 0, 1));
 
 $pdo      = db();
 $services = $pdo->query("SELECT id, name FROM services ORDER BY name")->fetchAll();
-$doctors  = $pdo->query("SELECT id, name, specialty FROM doctors WHERE available = 1 ORDER BY name")->fetchAll();
+$doctors  = $pdo->query("SELECT id, name, specialty, schedule FROM doctors WHERE available = 1 ORDER BY name")->fetchAll();
 
 $prefillDoc  = (int) ($_GET['doctor_id'] ?? 0);
 $prefillDate = trim($_GET['date'] ?? '');
@@ -66,14 +66,31 @@ require_once __DIR__ . '/../../includes/header.php';
                 <select class="form-select" id="doctor" name="doctor_id" required>
                   <option value="">-- Select Doctor --</option>
                   <?php foreach ($doctors as $doc): ?>
-                  <option value="<?= $doc['id'] ?>" <?= $doc['id'] == $prefillDoc ? 'selected' : '' ?>><?= htmlspecialchars($doc['name']) ?> – <?= htmlspecialchars($doc['specialty']) ?></option>
+                  <?php 
+                    $docDutyDays = parseDoctorScheduleDays($doc['schedule'] ?? '');
+                    $docDutyStr  = implode(', ', $docDutyDays);
+                  ?>
+                  <option value="<?= $doc['id'] ?>" 
+                          data-schedule="<?= htmlspecialchars($doc['schedule'] ?? 'Mon-Fri') ?>" 
+                          data-days='<?= htmlspecialchars(json_encode($docDutyDays), ENT_QUOTES, 'UTF-8') ?>' 
+                          <?= $doc['id'] == $prefillDoc ? 'selected' : '' ?>>
+                    <?= htmlspecialchars($doc['name']) ?> – <?= htmlspecialchars($doc['specialty']) ?> (<?= htmlspecialchars($docDutyStr) ?>)
+                  </option>
                   <?php endforeach; ?>
                 </select>
+                <div class="alert alert-info mt-1" id="doctorDutyNotice" style="display:none;margin-bottom:0;padding:8px 12px;font-size:12px;">
+                  <i class="fa-solid fa-calendar-check"></i>
+                  <span id="doctorDutyText"></span>
+                </div>
               </div>
               <div class="form-row">
                 <div class="form-group">
-                  <label class="form-label">Preferred Date *</label>
+                  <label class="form-label">Preferred Date * <small style="color:var(--gray-600);font-weight:normal;">(Weekdays only)</small></label>
                   <input type="date" class="form-control" id="aptDate" name="date" min="<?= date('Y-m-d') ?>" value="<?= htmlspecialchars($prefillDate) ?>" required />
+                  <div class="alert alert-warning mt-1" id="dateNotice" style="display:none;margin-bottom:0;padding:8px 12px;font-size:12px;">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                    <span id="dateNoticeText"></span>
+                  </div>
                 </div>
                 <div class="form-group">
                   <label class="form-label">Preferred Time *</label>
@@ -153,17 +170,126 @@ $extraScripts = <<<'JS'
   const cal = new RHUCalendar('bookingCalendar', {
     onSelect: (date) => {
       document.getElementById('aptDate').value = date;
-      loadTimeSlots(date);
+      handleDateOrDoctorChange();
     }
   });
 
-  document.getElementById('aptDate').addEventListener('change', function() {
-    loadTimeSlots(this.value);
-  });
+  function getSelectedDoctorDays() {
+    const doctorEl = document.getElementById('doctor');
+    const opt = doctorEl?.options[doctorEl.selectedIndex];
+    if (!opt || !opt.value) return null;
+    try {
+      return JSON.parse(opt.getAttribute('data-days') || '[]');
+    } catch(e) {
+      return null;
+    }
+  }
+
+  function validateSchedule(dateStr) {
+    if (!dateStr) return { valid: false, message: 'Please select a date.' };
+    const d = new Date(dateStr + 'T00:00:00');
+    const dayOfWeek = d.getDay(); // 0 = Sun, 6 = Sat
+
+    if (dayOfWeek === 0 || dayOfWeek === 6) {
+      return {
+        valid: false,
+        isWeekend: true,
+        message: 'The RHU is closed on weekends (Saturday and Sunday). Please select a weekday (Monday to Friday).'
+      };
+    }
+
+    const doctorDays = getSelectedDoctorDays();
+    if (doctorDays && doctorDays.length > 0) {
+      const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+      const shortDay = dayNames[dayOfWeek];
+      if (!doctorDays.includes(shortDay)) {
+        const fullDay = d.toLocaleDateString('en-US', { weekday: 'long' });
+        return {
+          valid: false,
+          isDoctorOff: true,
+          message: `The selected doctor is not on duty on ${fullDay}. Regular schedule: ${doctorDays.join(', ')}.`
+        };
+      }
+    }
+
+    return { valid: true };
+  }
+
+  function updateDoctorDutyBanner() {
+    const doctorEl = document.getElementById('doctor');
+    const noticeEl = document.getElementById('doctorDutyNotice');
+    const textEl   = document.getElementById('doctorDutyText');
+    const opt      = doctorEl?.options[doctorEl.selectedIndex];
+
+    if (!opt || !opt.value) {
+      if (noticeEl) noticeEl.style.display = 'none';
+      cal.setDoctorFilter(null);
+      return;
+    }
+
+    const dutyDays = getSelectedDoctorDays();
+    if (dutyDays && dutyDays.length > 0) {
+      if (noticeEl && textEl) {
+        textEl.innerHTML = `<strong>Doctor Schedule:</strong> Active on <strong>${dutyDays.join(', ')}</strong> (Weekdays only, 8:00 AM – 5:00 PM).`;
+        noticeEl.style.display = 'flex';
+      }
+      cal.setDoctorFilter(dutyDays);
+    } else {
+      if (noticeEl) noticeEl.style.display = 'none';
+      cal.setDoctorFilter(null);
+    }
+  }
+
+  function handleDateOrDoctorChange() {
+    const date = document.getElementById('aptDate').value;
+    const dateNotice = document.getElementById('dateNotice');
+    const dateNoticeText = document.getElementById('dateNoticeText');
+
+    if (!date) {
+      if (dateNotice) dateNotice.style.display = 'none';
+      return;
+    }
+
+    const check = validateSchedule(date);
+    if (!check.valid) {
+      if (dateNotice && dateNoticeText) {
+        dateNoticeText.textContent = check.message;
+        dateNotice.style.display = 'flex';
+      }
+      // Show closed status in slot container
+      showClosedScheduleWarning(check.message);
+      return;
+    }
+
+    if (dateNotice) dateNotice.style.display = 'none';
+    loadTimeSlots(date);
+  }
+
+  function showClosedScheduleWarning(message) {
+    const card      = document.getElementById('timeSlotsCard');
+    const container = document.getElementById('timeSlots');
+    const selectEl  = document.getElementById('aptTime');
+    const notice    = document.getElementById('timeNotice');
+    if (notice) notice.style.display = 'none';
+
+    card.style.display = 'block';
+    selectEl.innerHTML = '<option value="">-- No slots available (Closed / Off Duty) --</option>';
+    selectEl.value = '';
+
+    container.innerHTML = `
+      <div style="grid-column:1/-1;background:#fff3cd;border:1px solid #ffeeba;color:#856404;border-radius:10px;padding:16px 20px;text-align:center;">
+        <div style="font-size:20px;margin-bottom:6px;"><i class="fa-solid fa-calendar-xmark text-danger"></i></div>
+        <strong style="display:block;font-size:14px;margin-bottom:4px;">Date Unavailable for Booking</strong>
+        <p style="margin:0;font-size:13px;line-height:1.5;">${message}</p>
+      </div>
+    `;
+  }
+
+  document.getElementById('aptDate').addEventListener('change', handleDateOrDoctorChange);
 
   document.getElementById('doctor')?.addEventListener('change', function() {
-    const date = document.getElementById('aptDate').value;
-    if (date) loadTimeSlots(date);
+    updateDoctorDutyBanner();
+    handleDateOrDoctorChange();
   });
 
   async function loadTimeSlots(date) {
@@ -183,6 +309,10 @@ $extraScripts = <<<'JS'
     try {
       const res  = await fetch(`${BASE}/actions/api/get-booked-dates.php?date=${date}&doctor_id=${doctorId}`);
       const data = await res.json();
+      if (data.is_closed) {
+        showClosedScheduleWarning(data.closed_reason || 'Clinic is closed on this date.');
+        return;
+      }
       bookedTimes = data.booked_times || [];
       pastTimes   = data.past_times || [];
     } catch(e) {}
@@ -287,6 +417,12 @@ $extraScripts = <<<'JS'
   function checkAvailability() {
     const date = document.getElementById('aptDate').value;
     if (!date) { showToast('Please select a date first.', 'warning'); return; }
+    const check = validateSchedule(date);
+    if (!check.valid) {
+      showToast(check.message, 'warning');
+      handleDateOrDoctorChange();
+      return;
+    }
     loadTimeSlots(date);
     showToast('Availability loaded for ' + formatDate(date), 'info');
   }
@@ -305,6 +441,13 @@ $extraScripts = <<<'JS'
       showToast('Please fill in all required fields.', 'warning'); return;
     }
 
+    const check = validateSchedule(date);
+    if (!check.valid) {
+      showToast(check.message, 'warning');
+      document.getElementById('aptDate').focus();
+      return;
+    }
+
     document.getElementById('confirmDetails').innerHTML = `
       <div class="detail-item"><div class="detail-label">Service</div><div class="detail-value">${serviceText}</div></div>
       <div class="detail-item"><div class="detail-label">Doctor</div><div class="detail-value">${doctorText}</div></div>
@@ -317,17 +460,23 @@ $extraScripts = <<<'JS'
   // Pre-fill from Guest Schedule Viewer if passed
   const PREFILL_DATE = '<?= htmlspecialchars($prefillDate) ?>';
   const PREFILL_TIME = '<?= htmlspecialchars($prefillTime) ?>';
-  if (PREFILL_DATE) {
-    loadTimeSlots(PREFILL_DATE).then(() => {
+
+  // Initialize doctor duty banner if prefilled
+  document.addEventListener('DOMContentLoaded', () => {
+    updateDoctorDutyBanner();
+    if (PREFILL_DATE) {
+      handleDateOrDoctorChange();
       if (PREFILL_TIME) {
-        document.getElementById('aptTime').value = PREFILL_TIME;
-        const matchingSlot = Array.from(document.querySelectorAll('#timeSlots > div')).find(d => d.textContent.includes(formatTime(PREFILL_TIME)));
-        if (matchingSlot) {
-          matchingSlot.style.outline = '2px solid var(--primary)';
-        }
+        setTimeout(() => {
+          document.getElementById('aptTime').value = PREFILL_TIME;
+          const matchingSlot = Array.from(document.querySelectorAll('#timeSlots > div')).find(d => d.textContent.includes(formatTime(PREFILL_TIME)));
+          if (matchingSlot) {
+            matchingSlot.style.outline = '2px solid var(--primary)';
+          }
+        }, 300);
       }
-    });
-  }
+    }
+  });
 </script>
 JS;
 require_once __DIR__ . '/../../includes/footer.php';

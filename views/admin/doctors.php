@@ -231,15 +231,13 @@ require_once __DIR__ . '/../../includes/header.php';
           <div style="margin-bottom:8px;">
             <select class="form-select" id="addSchedulePreset" onchange="applySchedulePreset('add')">
               <option value="">-- Choose Quick Preset or Pick Days Below --</option>
-              <option value="Mon-Sat">Monday to Saturday (Mon-Sat)</option>
               <option value="Mon-Fri">Monday to Friday (Mon-Fri)</option>
               <option value="Mon-Wed-Fri">Monday, Wednesday, Friday (Mon-Wed-Fri)</option>
               <option value="Tue-Thu">Tuesday, Thursday (Tue-Thu)</option>
               <option value="Mon-Thu">Monday to Thursday (Mon-Thu)</option>
               <option value="Wed-Fri">Wednesday, Friday (Wed-Fri)</option>
               <option value="Tue-Fri">Tuesday to Friday (Tue-Fri)</option>
-              <option value="Sat">Saturday Only (Sat)</option>
-              <option value="custom">Custom Days Selection</option>
+              <option value="custom">Custom Weekdays Selection</option>
             </select>
           </div>
           <div class="day-selector-group" id="addDaySelectorGroup">
@@ -263,12 +261,9 @@ require_once __DIR__ . '/../../includes/header.php';
               <input type="checkbox" name="schedule_days[]" value="Fri" onchange="syncScheduleFromDays('add')">
               <span>Fri</span>
             </label>
-            <label class="day-chip" id="addChip_Sat">
-              <input type="checkbox" name="schedule_days[]" value="Sat" onchange="syncScheduleFromDays('add')">
-              <span>Sat</span>
-            </label>
           </div>
-          <div class="schedule-preview-badge empty" id="addScheduleBadge">
+          <small class="text-muted" style="display:block;margin-top:4px;"><i class="fa-solid fa-circle-info"></i> Clinic is open Monday to Friday only. Weekends are closed.</small>
+          <div class="schedule-preview-badge empty" id="addScheduleBadge" style="margin-top:8px;">
             <i class="fa-solid fa-calendar-days"></i> Selected: <strong id="addScheduleText" style="margin-left:4px;">None selected</strong>
           </div>
           <input type="hidden" name="schedule" id="addDocSchedule" required />
@@ -313,15 +308,13 @@ require_once __DIR__ . '/../../includes/header.php';
           <div style="margin-bottom:8px;">
             <select class="form-select" id="editSchedulePreset" onchange="applySchedulePreset('edit')">
               <option value="">-- Choose Quick Preset or Pick Days Below --</option>
-              <option value="Mon-Sat">Monday to Saturday (Mon-Sat)</option>
               <option value="Mon-Fri">Monday to Friday (Mon-Fri)</option>
               <option value="Mon-Wed-Fri">Monday, Wednesday, Friday (Mon-Wed-Fri)</option>
               <option value="Tue-Thu">Tuesday, Thursday (Tue-Thu)</option>
               <option value="Mon-Thu">Monday to Thursday (Mon-Thu)</option>
               <option value="Wed-Fri">Wednesday, Friday (Wed-Fri)</option>
               <option value="Tue-Fri">Tuesday to Friday (Tue-Fri)</option>
-              <option value="Sat">Saturday Only (Sat)</option>
-              <option value="custom">Custom Days Selection</option>
+              <option value="custom">Custom Weekdays Selection</option>
             </select>
           </div>
           <div class="day-selector-group" id="editDaySelectorGroup">
@@ -345,12 +338,9 @@ require_once __DIR__ . '/../../includes/header.php';
               <input type="checkbox" name="schedule_days[]" value="Fri" onchange="syncScheduleFromDays('edit')">
               <span>Fri</span>
             </label>
-            <label class="day-chip" id="editChip_Sat">
-              <input type="checkbox" name="schedule_days[]" value="Sat" onchange="syncScheduleFromDays('edit')">
-              <span>Sat</span>
-            </label>
           </div>
-          <div class="schedule-preview-badge empty" id="editScheduleBadge">
+          <small class="text-muted" style="display:block;margin-top:4px;"><i class="fa-solid fa-circle-info"></i> Clinic is open Monday to Friday only. Weekends are closed.</small>
+          <div class="schedule-preview-badge empty" id="editScheduleBadge" style="margin-top:8px;">
             <i class="fa-solid fa-calendar-days"></i> Selected: <strong id="editScheduleText" style="margin-left:4px;">None selected</strong>
           </div>
           <input type="hidden" name="schedule" id="editDocSchedule" required />
@@ -376,17 +366,15 @@ $autoOpenAdd = ($flashError && !isset($_POST['id']));
 ob_start();
 ?>
 <script>
-  const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
 
   const PRESET_MAP = {
-    'Mon-Sat': ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
     'Mon-Fri': ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
     'Mon-Wed-Fri': ['Mon', 'Wed', 'Fri'],
     'Tue-Thu': ['Tue', 'Thu'],
     'Mon-Thu': ['Mon', 'Tue', 'Wed', 'Thu'],
     'Wed-Fri': ['Wed', 'Fri'],
-    'Tue-Fri': ['Tue', 'Wed', 'Thu', 'Fri'],
-    'Sat': ['Sat']
+    'Tue-Fri': ['Tue', 'Wed', 'Thu', 'Fri']
   };
 
   function applySchedulePreset(prefix) {
@@ -509,10 +497,6 @@ ob_start();
     const s = schedStr.trim();
     const lower = s.toLowerCase();
 
-    // Check Monday to Saturday
-    if (lower.includes('mon') && (lower.includes('sat') || lower.includes('saturday')) && (lower.includes('to') || lower.includes('-'))) {
-      return ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-    }
     // Check Monday to Friday
     if (lower.includes('mon') && (lower.includes('fri') || lower.includes('friday')) && (lower.includes('to') || lower.includes('-'))) {
       return ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
@@ -526,14 +510,13 @@ ob_start();
       return ['Tue', 'Wed', 'Thu', 'Fri'];
     }
 
-    // Parse discrete days
+    // Parse discrete weekdays only (Mon-Fri)
     const detected = [];
     if (lower.includes('mon')) detected.push('Mon');
     if (lower.includes('tue')) detected.push('Tue');
     if (lower.includes('wed')) detected.push('Wed');
     if (lower.includes('thu')) detected.push('Thu');
     if (lower.includes('fri')) detected.push('Fri');
-    if (lower.includes('sat')) detected.push('Sat');
     return detected;
   }
 

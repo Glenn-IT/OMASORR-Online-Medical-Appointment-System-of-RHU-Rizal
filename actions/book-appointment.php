@@ -25,7 +25,11 @@ $reason    = trim($_POST['reason'] ?? '');
 $errors = [];
 if (!$serviceId)                       $errors[] = 'Please select a service.';
 if (!$doctorId)                        $errors[] = 'Please select a doctor.';
-if (!$date || $date < date('Y-m-d'))   $errors[] = 'Please select a valid future date.';
+if (!$date || $date < date('Y-m-d')) {
+    $errors[] = 'Please select a valid future date.';
+} elseif (!isClinicOpenDate($date)) {
+    $errors[] = 'The RHU is only open on weekdays (Monday to Friday). Weekends (Saturday and Sunday) are closed.';
+}
 if (!$time)                            $errors[] = 'Please select a time slot.';
 if ($date === date('Y-m-d') && $time && $time <= date('H:i')) {
     $errors[] = 'The selected time slot has already passed for today. Please select an upcoming time slot or a future date.';
@@ -39,6 +43,29 @@ if ($errors) {
 
 try {
     $pdo = db();
+
+    // Verify doctor exists, is available, and is on duty on the requested date
+    $docStmt = $pdo->prepare("SELECT id, name, schedule, available FROM doctors WHERE id = ? LIMIT 1");
+    $docStmt->execute([$doctorId]);
+    $doctor = $docStmt->fetch();
+    if (!$doctor) {
+        flashMessage('book_error', 'Invalid doctor selected.', 'danger');
+        redirectTo('/views/user/book-appointment.php');
+    }
+    $docDisplayName = $doctor['name'];
+    if (!preg_match('/^Dr\.?/i', $docDisplayName)) {
+        $docDisplayName = 'Dr. ' . $docDisplayName;
+    }
+    if (!(int)$doctor['available']) {
+        flashMessage('book_error', "{$docDisplayName} is currently unavailable.", 'danger');
+        redirectTo('/views/user/book-appointment.php');
+    }
+    if (!isDoctorOnDuty($doctor['schedule'] ?? '', $date)) {
+        $dayName  = date('l', strtotime($date));
+        $dutyDays = implode(', ', parseDoctorScheduleDays($doctor['schedule'] ?? ''));
+        flashMessage('book_error', "{$docDisplayName} is not on duty on {$dayName}. Regular schedule: {$dutyDays}.", 'danger');
+        redirectTo('/views/user/book-appointment.php');
+    }
 
     // Prevent double-booking: same doctor, date, time
     $stmt = $pdo->prepare("
