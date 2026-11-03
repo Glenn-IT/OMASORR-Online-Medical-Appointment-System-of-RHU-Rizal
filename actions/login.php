@@ -4,7 +4,7 @@ require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../config/auth.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    redirectTo('/index.php');
+    redirectTo('/login.php');
 }
 verifyCsrf();
 
@@ -13,7 +13,7 @@ $password = trim($_POST['password'] ?? '');
 
 if ($username === '' || $password === '') {
     flashMessage('login_error', 'Please enter your username and password.', 'warning');
-    redirectTo('/index.php');
+    redirectTo('/login.php');
 }
 
 try {
@@ -33,7 +33,7 @@ try {
     if ($row && $row['locked_until'] && strtotime($row['locked_until']) > time()) {
         $_SESSION['login_lockout'] = ['until' => strtotime($row['locked_until'])];
         flashMessage('login_error', 'Account locked. Please wait 30 seconds before trying again.', 'danger');
-        redirectTo('/index.php');
+        redirectTo('/login.php');
     }
 
     if (!$row || !password_verify($password, $row['password_hash'])) {
@@ -53,7 +53,7 @@ try {
         } else {
             flashMessage('login_error', 'Invalid username or password.', 'danger');
         }
-        redirectTo('/index.php');
+        redirectTo('/login.php');
     }
 
     $pdo->prepare("UPDATE users SET failed_attempts = 0, locked_until = NULL WHERE id = ?")
@@ -62,7 +62,7 @@ try {
 
     if ($row['status'] !== 'Active') {
         flashMessage('login_error', 'Your account is inactive. Please contact the clinic.', 'warning');
-        redirectTo('/index.php');
+        redirectTo('/login.php');
     }
 
     $user    = ['username' => $row['username'], 'status' => $row['status']];
@@ -86,5 +86,5 @@ try {
 
 } catch (RuntimeException $e) {
     flashMessage('login_error', 'A server error occurred. Please try again later.', 'danger');
-    redirectTo('/index.php');
+    redirectTo('/login.php');
 }

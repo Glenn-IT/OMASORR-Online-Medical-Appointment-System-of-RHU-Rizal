@@ -94,7 +94,7 @@ try {
     sendWelcomeEmail($email, trim("$firstName $lastName"), $username, $patientNo);
 
     flashMessage('signup_success', 'Account created successfully! You can now log in.', 'success');
-    redirectTo('/index.php');
+    redirectTo('/login.php');
 
 } catch (RuntimeException $e) {
     if (isset($pdo) && $pdo->inTransaction()) $pdo->rollBack();

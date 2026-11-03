@@ -19,6 +19,6 @@ header('Expires: Sat, 01 Jan 2000 00:00:00 GMT');
 if ($wasAdmin) {
     header('Location: ' . BASE_URL . '/views/admin/login.php?logged_out=1');
 } else {
-    header('Location: ' . BASE_URL . '/index.php?logged_out=1');
+    header('Location: ' . BASE_URL . '/login.php?logged_out=1');
 }
 exit;

@@ -65,7 +65,7 @@ function requireLogin(string $role = 'patient'): void
         }
     } else {
         if (empty($_SESSION['patient'])) {
-            header('Location: ' . BASE_URL . '/index.php');
+            header('Location: ' . BASE_URL . '/login.php');
             exit;
         }
     }

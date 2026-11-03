@@ -4,13 +4,13 @@ require_once __DIR__ . '/../../config/database.php';
 require_once __DIR__ . '/../../config/auth.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    redirectTo('/index.php');
+    redirectTo('/login.php');
 }
 verifyCsrf();
 
 $state       = $_SESSION['pwd_reset'] ?? null;
 $accountType = ($state['account_type'] ?? 'patient') === 'admin' ? 'admin' : 'patient';
-$loginPage   = $accountType === 'admin' ? '/views/admin/login.php' : '/index.php';
+$loginPage   = $accountType === 'admin' ? '/views/admin/login.php' : '/login.php';
 $errorKey    = $accountType === 'admin' ? 'admin_forgot_error' : 'forgot_error';
 
 if (!$state || $state['step'] !== 'reset') {

@@ -77,7 +77,7 @@ require_once __DIR__ . '/../../includes/header.php';
         </button>
 
         <div class="text-center mt-2">
-          <a href="<?= BASE_URL ?>/index.php" class="link-primary" style="font-size:12px">
+          <a href="<?= BASE_URL ?>/login.php" class="link-primary" style="font-size:12px">
             <i class="fa-solid fa-arrow-left"></i> Back to Patient Login
           </a>
         </div>

@@ -5,12 +5,12 @@ require_once __DIR__ . '/../../config/auth.php';
 require_once __DIR__ . '/../../config/mailer.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    redirectTo('/index.php');
+    redirectTo('/login.php');
 }
 verifyCsrf();
 
 $accountType = ($_POST['account_type'] ?? 'patient') === 'admin' ? 'admin' : 'patient';
-$loginPage   = $accountType === 'admin' ? '/views/admin/login.php' : '/index.php';
+$loginPage   = $accountType === 'admin' ? '/views/admin/login.php' : '/login.php';
 $noticeKey   = $accountType === 'admin' ? 'admin_forgot_notice' : 'forgot_notice';
 
 $email = trim($_POST['email'] ?? '');

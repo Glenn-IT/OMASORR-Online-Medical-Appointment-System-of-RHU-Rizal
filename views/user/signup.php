@@ -188,7 +188,7 @@ require_once __DIR__ . '/../../includes/header.php';
           Your account has been successfully registered.<br />
           You can now log in and book appointments.
         </p>
-        <a href="<?= $base ?>/index.php" class="btn btn-primary btn-block">
+        <a href="<?= $base ?>/login.php" class="btn btn-primary btn-block">
           <i class="fa-solid fa-right-to-bracket"></i> Go to Login
         </a>
       </div>
@@ -197,7 +197,7 @@ require_once __DIR__ . '/../../includes/header.php';
 
       <p class="text-center mt-3" style="font-size:13px">
         Already have an account?
-        <a href="<?= $base ?>/index.php" class="link-primary">Sign In</a>
+        <a href="<?= $base ?>/login.php" class="link-primary">Sign In</a>
       </p>
       <div class="text-center mt-2">
         <a href="<?= $base ?>/schedule.php" class="link-primary" style="font-size:12px">

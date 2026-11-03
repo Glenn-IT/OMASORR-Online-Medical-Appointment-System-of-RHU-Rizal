@@ -388,7 +388,7 @@ require_once __DIR__ . '/../includes/header.php';
 <!-- Public Navigation -->
 <nav class="guest-nav">
   <div class="guest-nav-container">
-    <a href="<?= BASE_URL ?>/schedule.php" class="guest-brand">
+    <a href="<?= BASE_URL ?>/index.php" class="guest-brand">
       <div class="guest-brand-icon"><i class="fa-solid fa-hospital"></i></div>
       <div>
         <div class="guest-brand-title">RHU Rizal Schedule Board</div>
@@ -415,7 +415,7 @@ require_once __DIR__ . '/../includes/header.php';
           <i class="fa-solid fa-gauge"></i> Admin Panel
         </a>
       <?php else: ?>
-        <a href="<?= BASE_URL ?>/index.php" class="btn btn-outline-primary btn-sm">
+        <a href="<?= BASE_URL ?>/login.php" class="btn btn-outline-primary btn-sm">
           <i class="fa-solid fa-right-to-bracket"></i> Patient Sign In
         </a>
         <a href="<?= BASE_URL ?>/views/user/signup.php" class="btn btn-primary btn-sm" onclick="this.href='<?= BASE_URL ?>/views/user/signup.php?_t=' + Date.now();">
@@ -736,7 +736,7 @@ require_once __DIR__ . '/../includes/header.php';
       </div>
 
       <div style="display:flex;flex-direction:column;gap:10px;">
-        <a id="modalSignInBtn" href="<?= BASE_URL ?>/index.php" class="btn btn-primary btn-block">
+        <a id="modalSignInBtn" href="<?= BASE_URL ?>/login.php" class="btn btn-primary btn-block">
           <i class="fa-solid fa-right-to-bracket"></i> Sign In to Confirm Slot
         </a>
         <a href="<?= BASE_URL ?>/views/user/signup.php" class="btn btn-outline-primary btn-block" onclick="this.href='<?= BASE_URL ?>/views/user/signup.php?_t=' + Date.now();">
@@ -768,7 +768,7 @@ require_once __DIR__ . '/../includes/header.php';
         <li><a href="#vacant-slots" class="link-primary"><i class="fa-solid fa-chevron-right" style="font-size:10px;"></i> Vacant Slot Checker</a></li>
         <li><a href="#doctors-roster" class="link-primary"><i class="fa-solid fa-chevron-right" style="font-size:10px;"></i> Doctor Schedules</a></li>
         <li><a href="#services-directory" class="link-primary"><i class="fa-solid fa-chevron-right" style="font-size:10px;"></i> Available Services</a></li>
-        <li><a href="<?= BASE_URL ?>/index.php" class="link-primary"><i class="fa-solid fa-chevron-right" style="font-size:10px;"></i> Patient Portal Login</a></li>
+        <li><a href="<?= BASE_URL ?>/login.php" class="link-primary"><i class="fa-solid fa-chevron-right" style="font-size:10px;"></i> Patient Portal Login</a></li>
         <li><a href="<?= BASE_URL ?>/views/admin/login.php" class="link-primary"><i class="fa-solid fa-chevron-right" style="font-size:10px;"></i> Healthcare Staff Login</a></li>
       </ul>
     </div>
@@ -1025,7 +1025,7 @@ require_once __DIR__ . '/../includes/header.php';
     `;
 
     const redirectUrl = encodeURIComponent(`${BASE}/views/user/book-appointment.php?date=${date}&time=${time}${doctorId > 0 ? '&doctor_id=' + doctorId : ''}`);
-    document.getElementById('modalSignInBtn').href = `${BASE}/index.php?redirect=${redirectUrl}`;
+    document.getElementById('modalSignInBtn').href = `${BASE}/login.php?redirect=${redirectUrl}`;
 
     openModal('slotActionModal');
   }
