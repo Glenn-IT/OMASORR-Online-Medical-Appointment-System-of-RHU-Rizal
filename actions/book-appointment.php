@@ -80,6 +80,21 @@ try {
         redirectTo('/views/user/book-appointment.php');
     }
 
+    // Limit: Only 1 active appointment transaction per patient per day (unless cancelled or rejected)
+    $dailyLimitStmt = $pdo->prepare("
+        SELECT id, appt_no, time FROM appointments
+        WHERE patient_id = ? AND date = ?
+          AND status NOT IN ('Cancelled','Rejected')
+        LIMIT 1
+    ");
+    $dailyLimitStmt->execute([$patientId, $date]);
+    if ($existingAppt = $dailyLimitStmt->fetch()) {
+        $formattedDate = date('F j, Y', strtotime($date));
+        $formattedTime = date('g:i A', strtotime($existingAppt['time']));
+        flashMessage('book_error', "You already have an active appointment ({$existingAppt['appt_no']} at {$formattedTime}) scheduled for {$formattedDate}. Only 1 active appointment is allowed per day. If you need to rebook, please cancel your existing appointment first.", 'warning');
+        redirectTo('/views/user/book-appointment.php');
+    }
+
     // Get service name
     $svc = $pdo->prepare("SELECT name FROM services WHERE id = ? LIMIT 1");
     $svc->execute([$serviceId]);

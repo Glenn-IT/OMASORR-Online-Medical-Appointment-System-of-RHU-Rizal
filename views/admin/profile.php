@@ -12,6 +12,12 @@ $phone     = htmlspecialchars($admin['phone']     ?? '');
 $role      = htmlspecialchars($admin['role']      ?? 'System Administrator');
 $username  = htmlspecialchars($admin['username']  ?? '');
 $initial   = strtoupper(substr($fullName, 0, 1) ?: 'A');
+$adminPhoto = $admin['profile_photo'] ?? null;
+if (!$adminPhoto) {
+    $rowPhoto = db()->prepare("SELECT profile_photo FROM admin_users WHERE id = ?");
+    $rowPhoto->execute([$adminId]);
+    $adminPhoto = $rowPhoto->fetchColumn();
+}
 
 $profileFlash  = getFlash('profile_error')  ?? getFlash('profile_success');
 $passwordFlash = getFlash('password_error') ?? getFlash('password_success');
@@ -31,7 +37,13 @@ require_once __DIR__ . '/../../includes/header.php';
         </div>
         <div class="topbar-right">
           <div class="topbar-user">
-            <div class="avatar"><?= $initial ?></div>
+            <div class="avatar" style="overflow:hidden;padding:0;display:flex;align-items:center;justify-content:center;">
+              <?php if (!empty($adminPhoto) && file_exists(__DIR__ . '/../../assets/uploads/avatars/' . $adminPhoto)): ?>
+                <img src="<?= BASE_URL ?>/assets/uploads/avatars/<?= htmlspecialchars($adminPhoto) ?>" alt="Avatar" style="width:100%;height:100%;object-fit:cover;" />
+              <?php else: ?>
+                <?= $initial ?>
+              <?php endif; ?>
+            </div>
             <span class="user-name"><?= $fullName ?></span>
           </div>
         </div>
@@ -56,7 +68,11 @@ require_once __DIR__ . '/../../includes/header.php';
           <!-- Profile Card -->
           <div class="card">
             <div class="card-body text-center" style="padding:32px">
-              <div class="profile-avatar"><?= $initial ?></div>
+              <?php if (!empty($adminPhoto) && file_exists(__DIR__ . '/../../assets/uploads/avatars/' . $adminPhoto)): ?>
+                <img src="<?= BASE_URL ?>/assets/uploads/avatars/<?= htmlspecialchars($adminPhoto) ?>" alt="Admin Profile" style="width:96px;height:96px;border-radius:50%;object-fit:cover;border:3px solid var(--primary);box-shadow:var(--shadow-sm);margin:0 auto 14px;display:block;" />
+              <?php else: ?>
+                <div class="profile-avatar"><?= $initial ?></div>
+              <?php endif; ?>
               <h3 style="font-size:18px;font-weight:700;margin-bottom:4px"><?= $fullName ?></h3>
               <p style="font-size:13px;color:#888;margin-bottom:6px"><?= $email ?: '—' ?></p>
               <div style="display:inline-flex;align-items:center;gap:6px;background:var(--primary-light);padding:5px 14px;border-radius:20px;margin-bottom:24px;">
@@ -116,7 +132,7 @@ require_once __DIR__ . '/../../includes/header.php';
         <button class="modal-close" data-modal-close="editProfileModal"><i class="fa-solid fa-xmark"></i></button>
       </div>
       <div class="modal-body">
-        <form method="POST" action="<?= BASE_URL ?>/actions/admin/update-profile.php">
+        <form method="POST" action="<?= BASE_URL ?>/actions/admin/update-profile.php" enctype="multipart/form-data">
           <?= csrfField() ?>
           <div class="form-row">
             <div class="form-group">
@@ -131,6 +147,10 @@ require_once __DIR__ . '/../../includes/header.php';
           <div class="form-group">
             <label class="form-label">Phone</label>
             <input type="tel" class="form-control" name="phone" value="<?= $phone ?>" placeholder="09XXXXXXXXX" inputmode="numeric" maxlength="11" pattern="09[0-9]{9}" title="Enter an 11-digit PH mobile number starting with 09" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,11)" />
+          </div>
+          <div class="form-group">
+            <label class="form-label"><i class="fa-solid fa-camera"></i> Profile Picture <small style="color:var(--gray-600);font-weight:normal;">(Upload JPG, PNG, or WEBP, max 2MB)</small></label>
+            <input type="file" class="form-control" name="profile_photo" accept="image/jpeg,image/png,image/webp" />
           </div>
           <div class="modal-footer">
             <button class="btn btn-secondary" type="button" data-modal-close="editProfileModal">Cancel</button>

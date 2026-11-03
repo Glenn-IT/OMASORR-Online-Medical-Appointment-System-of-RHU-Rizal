@@ -107,7 +107,8 @@ function setPatientSession(array $patient, array $user): void
         'patient_no' => $patient['patient_no'],
         'full_name'  => $patient['full_name'],
         'username'   => $user['username'],
-        'status'     => $user['status'],
+        'status'        => $user['status'],
+        'profile_photo' => $patient['profile_photo'] ?? null,
     ];
 }
 
@@ -125,7 +126,8 @@ function setAdminSession(array $admin): void
         'username'  => $admin['username'],
         'email'     => $admin['email'],
         'phone'     => $admin['phone'] ?? '',
-        'role'      => $admin['role'],
+        'role'          => $admin['role'],
+        'profile_photo' => $admin['profile_photo'] ?? null,
     ];
 }
 

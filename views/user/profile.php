@@ -48,7 +48,16 @@ require_once __DIR__ . '/../../includes/header.php';
           <div><h4>My Profile</h4><p>View and edit your personal information</p></div>
         </div>
         <div class="topbar-right">
-          <div class="topbar-user"><div class="avatar"><?= $initial ?></div><span class="user-name"><?= $fullName ?></span></div>
+          <div class="topbar-user">
+            <div class="avatar" style="overflow:hidden;padding:0;display:flex;align-items:center;justify-content:center;">
+              <?php if (!empty($p['profile_photo']) && file_exists(__DIR__ . '/../../assets/uploads/avatars/' . $p['profile_photo'])): ?>
+                <img src="<?= BASE_URL ?>/assets/uploads/avatars/<?= htmlspecialchars($p['profile_photo']) ?>" alt="Avatar" style="width:100%;height:100%;object-fit:cover;" />
+              <?php else: ?>
+                <?= $initial ?>
+              <?php endif; ?>
+            </div>
+            <span class="user-name"><?= $fullName ?></span>
+          </div>
         </div>
       </header>
 
@@ -64,7 +73,11 @@ require_once __DIR__ . '/../../includes/header.php';
           <!-- Profile Card -->
           <div class="card">
             <div class="card-body text-center" style="padding:32px">
-              <div class="profile-avatar"><?= $initial ?></div>
+              <?php if (!empty($p['profile_photo']) && file_exists(__DIR__ . '/../../assets/uploads/avatars/' . $p['profile_photo'])): ?>
+                <img src="<?= BASE_URL ?>/assets/uploads/avatars/<?= htmlspecialchars($p['profile_photo']) ?>" alt="Profile Picture" style="width:96px;height:96px;border-radius:50%;object-fit:cover;border:3px solid var(--primary);box-shadow:var(--shadow-sm);margin:0 auto 14px;display:block;" />
+              <?php else: ?>
+                <div class="profile-avatar"><?= $initial ?></div>
+              <?php endif; ?>
               <h3 style="font-size:18px;font-weight:700;margin-bottom:4px"><?= $fullName ?></h3>
               <p style="font-size:13px;color:#888;margin-bottom:12px"><?= $email ?></p>
               <div style="display:inline-flex;align-items:center;gap:6px;background:var(--primary-light);padding:5px 14px;border-radius:20px;margin-bottom:20px;">
@@ -115,7 +128,7 @@ require_once __DIR__ . '/../../includes/header.php';
     <div class="modal-box lg">
       <div class="modal-header"><h5><i class="fa-solid fa-pen-to-square"></i> Edit Profile</h5><button class="modal-close" onclick="closeModal('editProfileModal')"><i class="fa-solid fa-xmark"></i></button></div>
       <div class="modal-body">
-        <form method="POST" action="/rhu-appointment-system/actions/user/update-profile.php">
+        <form method="POST" action="/rhu-appointment-system/actions/user/update-profile.php" enctype="multipart/form-data">
           <?= csrfField() ?>
           <div class="form-row">
             <div class="form-group"><label class="form-label">Full Name</label><input type="text" class="form-control" name="full_name" value="<?= $fullName ?>" required /></div>
@@ -133,6 +146,10 @@ require_once __DIR__ . '/../../includes/header.php';
             </div>
           </div>
           <div class="form-group"><label class="form-label">Address</label><input type="text" class="form-control" name="address" value="<?= $address ?>" /></div>
+          <div class="form-group">
+            <label class="form-label"><i class="fa-solid fa-camera"></i> Profile Picture <small style="color:var(--gray-600);font-weight:normal;">(Upload JPG, PNG, or WEBP, max 2MB)</small></label>
+            <input type="file" class="form-control" name="profile_photo" accept="image/jpeg,image/png,image/webp" />
+          </div>
           <div class="modal-footer">
             <button class="btn btn-secondary" type="button" onclick="closeModal('editProfileModal')">Cancel</button>
             <button class="btn btn-primary" type="submit"><i class="fa-solid fa-save"></i> Save Changes</button>

@@ -12,6 +12,7 @@
 
 $base         = '/rhu-appointment-system';
 $adminName    = $_SESSION['admin']['full_name'] ?? 'Admin User';
+$adminPhoto   = $_SESSION['admin']['profile_photo'] ?? null;
 $adminInitial = strtoupper($adminName[0] ?? 'A');
 $currentPage  = basename($_SERVER['PHP_SELF']);
 ?>
@@ -25,7 +26,13 @@ $currentPage  = basename($_SERVER['PHP_SELF']);
   </div>
 
   <div class="sidebar-user">
-    <div class="user-avatar"><?= $adminInitial ?></div>
+    <div class="user-avatar" style="overflow:hidden;padding:0;display:flex;align-items:center;justify-content:center;">
+      <?php if (!empty($adminPhoto) && file_exists(__DIR__ . '/../assets/uploads/avatars/' . $adminPhoto)): ?>
+        <img src="<?= $base ?>/assets/uploads/avatars/<?= htmlspecialchars($adminPhoto) ?>" alt="Avatar" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" />
+      <?php else: ?>
+        <?= $adminInitial ?>
+      <?php endif; ?>
+    </div>
     <div class="user-info">
       <div class="name"><?= htmlspecialchars($adminName) ?></div>
       <div class="role">System Administrator</div>
@@ -64,6 +71,12 @@ $currentPage  = basename($_SERVER['PHP_SELF']);
     <a class="nav-item <?= $currentPage === 'reports.php' ? 'active' : '' ?>"
        href="<?= $base ?>/views/admin/reports.php">
       <i class="fa-solid fa-chart-bar"></i> Reports
+    </a>
+
+    <div class="nav-section-label">Communications</div>
+    <a class="nav-item <?= $currentPage === 'announcements.php' ? 'active' : '' ?>"
+       href="<?= $base ?>/views/admin/announcements.php">
+      <i class="fa-solid fa-bullhorn"></i> Announcements &amp; Notices
     </a>
 
     <div class="nav-section-label">Account</div>

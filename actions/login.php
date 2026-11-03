@@ -21,7 +21,7 @@ try {
     $stmt = $pdo->prepare("
         SELECT u.id AS user_id, u.username, u.password AS password_hash, u.status,
                u.failed_attempts, u.locked_until,
-               p.id AS patient_id, p.patient_no, p.full_name, p.birthdate, p.gender, p.phone
+               p.id AS patient_id, p.patient_no, p.full_name, p.birthdate, p.gender, p.phone, p.profile_photo
         FROM users u
         JOIN patients p ON p.user_id = u.id
         WHERE BINARY u.username = ?
@@ -69,7 +69,8 @@ try {
     $patient = [
         'id'         => $row['patient_id'],
         'patient_no' => $row['patient_no'],
-        'full_name'  => $row['full_name'],
+        'full_name'     => $row['full_name'],
+        'profile_photo' => $row['profile_photo'] ?? null,
     ];
 
     setPatientSession($patient, $user);

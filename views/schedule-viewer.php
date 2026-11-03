@@ -47,6 +47,18 @@ $totalDoctors = count($doctors);
 $activeDoctors = count(array_filter($doctors, fn($d) => (int)$d['available'] === 1));
 $totalServices = count($services);
 
+// Fetch active announcements and unavailability notices
+$activeAnnouncements = $pdo->query("
+    SELECT a.*, d.name AS doctor_name, s.name AS service_name
+    FROM announcements a
+    LEFT JOIN doctors d ON d.id = a.doctor_id
+    LEFT JOIN services s ON s.id = a.service_id
+    WHERE a.is_active = 1
+      AND (a.start_date IS NULL OR a.start_date <= CURDATE())
+      AND (a.end_date IS NULL OR a.end_date >= CURDATE())
+    ORDER BY a.created_at DESC
+")->fetchAll(PDO::FETCH_ASSOC);
+
 $pageTitle = 'Public Schedule & Vacant Slots – RHU Rizal';
 $extraHead = <<<'HTML'
 <style>
@@ -454,6 +466,32 @@ require_once __DIR__ . '/../includes/header.php';
 
 <!-- Main Viewer Content -->
 <main class="viewer-body">
+
+  <?php if (!empty($activeAnnouncements)): ?>
+  <div class="card mb-4" style="border-left:5px solid #d97706;background:#fffdf6;padding:18px 24px;border-radius:12px;box-shadow:var(--shadow-sm);margin-bottom:28px;">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+      <i class="fa-solid fa-bullhorn" style="color:#d97706;font-size:20px;"></i>
+      <h4 style="margin:0;font-size:17px;color:#92400e;font-weight:700;">Public Clinic Advisories &amp; Service Notices</h4>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));gap:14px;">
+      <?php foreach ($activeAnnouncements as $ann): ?>
+      <div style="background:#ffffff;border:1px solid #fef3c7;border-radius:10px;padding:14px 16px;box-shadow:0 1px 4px rgba(0,0,0,0.04);">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px;">
+          <strong style="color:var(--gray-800);font-size:14px;"><?= htmlspecialchars($ann['title']) ?></strong>
+          <?php if ($ann['type'] === 'doctor_unavailable'): ?>
+            <span class="badge badge-danger" style="font-size:10px;"><i class="fa-solid fa-user-doctor"></i> Doctor Offline</span>
+          <?php elseif ($ann['type'] === 'service_unavailable'): ?>
+            <span class="badge badge-warning" style="font-size:10px;"><i class="fa-solid fa-briefcase-medical"></i> Service Suspended</span>
+          <?php else: ?>
+            <span class="badge badge-info" style="font-size:10px;"><i class="fa-solid fa-circle-info"></i> Notice</span>
+          <?php endif; ?>
+        </div>
+        <p style="margin:0;font-size:13px;color:var(--gray-600);line-height:1.5;"><?= htmlspecialchars($ann['message']) ?></p>
+      </div>
+      <?php endforeach; ?>
+    </div>
+  </div>
+  <?php endif; ?>
 
   <!-- Overview Stat Counters -->
   <div class="stats-grid">

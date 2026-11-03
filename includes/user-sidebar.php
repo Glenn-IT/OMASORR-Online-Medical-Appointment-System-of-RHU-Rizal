@@ -13,6 +13,7 @@
 
 $base        = '/rhu-appointment-system';
 $userName    = $_SESSION['patient']['full_name'] ?? 'Patient User';
+$userPhoto   = $_SESSION['patient']['profile_photo'] ?? null;
 $userInitial = strtoupper($userName[0] ?? 'P');
 $currentPage = basename($_SERVER['PHP_SELF']);
 ?>
@@ -26,7 +27,13 @@ $currentPage = basename($_SERVER['PHP_SELF']);
   </div>
 
   <div class="sidebar-user">
-    <div class="user-avatar"><?= $userInitial ?></div>
+    <div class="user-avatar" style="overflow:hidden;padding:0;display:flex;align-items:center;justify-content:center;">
+      <?php if (!empty($userPhoto) && file_exists(__DIR__ . '/../assets/uploads/avatars/' . $userPhoto)): ?>
+        <img src="<?= $base ?>/assets/uploads/avatars/<?= htmlspecialchars($userPhoto) ?>" alt="Avatar" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" />
+      <?php else: ?>
+        <?= $userInitial ?>
+      <?php endif; ?>
+    </div>
     <div class="user-info">
       <div class="name"><?= htmlspecialchars($userName) ?></div>
       <div class="role">Patient</div>

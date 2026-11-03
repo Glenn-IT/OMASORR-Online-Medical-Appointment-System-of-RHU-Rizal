@@ -47,6 +47,15 @@ $pendingNotifs = $pdo->query("
     ORDER BY a.created_at DESC LIMIT 5
 ")->fetchAll();
 
+$activeAnnouncements = $pdo->query("
+    SELECT a.*, d.name AS doctor_name, s.name AS service_name
+    FROM announcements a
+    LEFT JOIN doctors d ON d.id = a.doctor_id
+    LEFT JOIN services s ON s.id = a.service_id
+    WHERE a.is_active = 1
+    ORDER BY a.created_at DESC
+")->fetchAll(PDO::FETCH_ASSOC);
+
 $pageTitle = 'Admin Dashboard – RHU Rizal';
 $extraHead = '<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>';
 require_once __DIR__ . '/../../includes/header.php';
@@ -70,7 +79,13 @@ require_once __DIR__ . '/../../includes/header.php';
           <i class="fa-solid fa-bell"></i><span class="notif-dot"></span>
         </button>
         <div class="topbar-user" onclick="window.location.href='profile.php'">
-          <div class="avatar"><?= $initial ?></div>
+          <div class="avatar" style="overflow:hidden;padding:0;display:flex;align-items:center;justify-content:center;">
+            <?php if (!empty($admin['profile_photo']) && file_exists(__DIR__ . '/../../assets/uploads/avatars/' . $admin['profile_photo'])): ?>
+              <img src="<?= BASE_URL ?>/assets/uploads/avatars/<?= htmlspecialchars($admin['profile_photo']) ?>" alt="Avatar" style="width:100%;height:100%;object-fit:cover;" />
+            <?php else: ?>
+              <?= $initial ?>
+            <?php endif; ?>
+          </div>
           <span class="user-name"><?= $adminName ?></span>
           <i class="fa-solid fa-chevron-down" style="font-size:11px;color:#999;"></i>
         </div>
@@ -91,6 +106,39 @@ require_once __DIR__ . '/../../includes/header.php';
           </div>
         </div>
       </div>
+
+      <?php if (!empty($activeAnnouncements)): ?>
+      <div class="card mb-3" style="border-left:4px solid var(--warning);background:#fffdf6;">
+        <div class="card-header" style="background:transparent;padding:12px 18px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <i class="fa-solid fa-bullhorn" style="color:#d97706;font-size:16px;"></i>
+            <h5 style="margin:0;font-size:15px;color:#92400e;">Active Clinic Advisories &amp; Unavailability Broadcasting</h5>
+          </div>
+          <a href="<?= BASE_URL ?>/views/admin/announcements.php" class="btn btn-outline-primary btn-sm">
+            <i class="fa-solid fa-gear"></i> Manage Notices
+          </a>
+        </div>
+        <div class="card-body" style="padding:12px 18px;">
+          <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));gap:10px;">
+            <?php foreach ($activeAnnouncements as $ann): ?>
+            <div style="background:#ffffff;border:1px solid #fef3c7;border-radius:8px;padding:12px 14px;box-shadow:var(--shadow-sm);">
+              <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:4px;">
+                <strong style="color:var(--gray-800);font-size:13px;"><?= htmlspecialchars($ann['title']) ?></strong>
+                <?php if ($ann['type'] === 'doctor_unavailable'): ?>
+                  <span class="badge badge-danger" style="font-size:10px;">Doctor Offline</span>
+                <?php elseif ($ann['type'] === 'service_unavailable'): ?>
+                  <span class="badge badge-warning" style="font-size:10px;">Service Suspended</span>
+                <?php else: ?>
+                  <span class="badge badge-info" style="font-size:10px;">Notice</span>
+                <?php endif; ?>
+              </div>
+              <p style="margin:0;font-size:12px;color:var(--gray-600);line-height:1.4;"><?= htmlspecialchars($ann['message']) ?></p>
+            </div>
+            <?php endforeach; ?>
+          </div>
+        </div>
+      </div>
+      <?php endif; ?>
 
       <!-- Stats Row -->
       <div class="grid-4 mb-3">

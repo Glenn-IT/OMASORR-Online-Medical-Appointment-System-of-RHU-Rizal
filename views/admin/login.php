@@ -134,7 +134,7 @@ require_once __DIR__ . '/../../includes/header.php';
         <?= csrfField() ?>
         <div class="modal-body">
           <p style="font-size:13.5px;color:#555;margin-bottom:16px">
-            Enter the 6-digit code we sent to your email. It expires in 10 minutes.
+            Enter the 6-digit code we sent to your email. It expires in 1 minute.
           </p>
           <div class="form-group">
             <label class="form-label">6-Digit Code</label>
@@ -163,14 +163,16 @@ require_once __DIR__ . '/../../includes/header.php';
             <label class="form-label">New Password</label>
             <div class="input-group">
               <i class="fa-solid fa-lock input-icon"></i>
-              <input type="password" class="form-control" name="new_password" placeholder="At least 8 characters" required minlength="8" />
+              <input type="password" class="form-control" name="new_password" id="adminResetNewPwd" placeholder="At least 8 characters" required minlength="8" />
+              <i class="fa-solid fa-eye input-icon-right" id="toggleAdminResetNew" style="pointer-events:all;cursor:pointer;"></i>
             </div>
           </div>
           <div class="form-group">
             <label class="form-label">Confirm Password</label>
             <div class="input-group">
               <i class="fa-solid fa-lock input-icon"></i>
-              <input type="password" class="form-control" name="confirm_password" placeholder="Re-enter password" required minlength="8" />
+              <input type="password" class="form-control" name="confirm_password" id="adminResetConfirmPwd" placeholder="Re-enter password" required minlength="8" />
+              <i class="fa-solid fa-eye input-icon-right" id="toggleAdminResetConfirm" style="pointer-events:all;cursor:pointer;"></i>
             </div>
           </div>
         </div>
@@ -198,6 +200,22 @@ $extraScripts = <<<JS
     if (pwd.type === 'password') { pwd.type = 'text';     icon.classList.replace('fa-eye','fa-eye-slash'); }
     else                         { pwd.type = 'password'; icon.classList.replace('fa-eye-slash','fa-eye'); }
   });
+
+  function setupPasswordToggle(inputId, toggleId) {
+    document.getElementById(toggleId)?.addEventListener('click', function () {
+      const input = document.getElementById(inputId);
+      if (!input) return;
+      if (input.type === 'password') {
+        input.type = 'text';
+        this.classList.replace('fa-eye', 'fa-eye-slash');
+      } else {
+        input.type = 'password';
+        this.classList.replace('fa-eye-slash', 'fa-eye');
+      }
+    });
+  }
+  setupPasswordToggle('adminResetNewPwd', 'toggleAdminResetNew');
+  setupPasswordToggle('adminResetConfirmPwd', 'toggleAdminResetConfirm');
 
   (function () {
     const lockUntil = {$lockoutUntil} * 1000;

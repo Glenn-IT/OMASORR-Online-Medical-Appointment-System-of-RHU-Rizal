@@ -69,6 +69,14 @@ if (!$name || !$specialty || !$schedule) {
 try {
     $pdo = db();
 
+    // Prevent duplicate doctor entry (case-insensitive name check)
+    $dupCheck = $pdo->prepare("SELECT id FROM doctors WHERE LOWER(TRIM(name)) = LOWER(TRIM(?)) AND id != ? LIMIT 1");
+    $dupCheck->execute([$name, $id]);
+    if ($dupCheck->fetch()) {
+        flashMessage('doctor_error', 'A doctor with this name already exists in the system.', 'danger');
+        redirectTo('/views/admin/doctors.php');
+    }
+
     if ($id > 0) {
         // Edit existing
         $pdo->prepare("UPDATE doctors SET name=?, specialty=?, schedule=?, available=? WHERE id=?")

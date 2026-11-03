@@ -12,6 +12,17 @@ $pdo      = db();
 $services = $pdo->query("SELECT id, name FROM services ORDER BY name")->fetchAll();
 $doctors  = $pdo->query("SELECT id, name, specialty, schedule FROM doctors WHERE available = 1 ORDER BY name")->fetchAll();
 
+$activeAnnouncements = $pdo->query("
+    SELECT a.*, d.name AS doctor_name, s.name AS service_name
+    FROM announcements a
+    LEFT JOIN doctors d ON d.id = a.doctor_id
+    LEFT JOIN services s ON s.id = a.service_id
+    WHERE a.is_active = 1
+      AND (a.start_date IS NULL OR a.start_date <= CURDATE())
+      AND (a.end_date IS NULL OR a.end_date >= CURDATE())
+    ORDER BY a.created_at DESC
+")->fetchAll(PDO::FETCH_ASSOC);
+
 $prefillDoc  = (int) ($_GET['doctor_id'] ?? 0);
 $prefillDate = trim($_GET['date'] ?? '');
 $prefillTime = trim($_GET['time'] ?? '');
@@ -33,12 +44,31 @@ require_once __DIR__ . '/../../includes/header.php';
         </div>
         <div class="topbar-right">
           <div class="topbar-user" onclick="window.location.href='<?= BASE_URL ?>/views/user/profile.php'">
-            <div class="avatar"><?= htmlspecialchars($initial) ?></div><span class="user-name"><?= htmlspecialchars($fullName) ?></span>
+            <div class="avatar" style="overflow:hidden;padding:0;display:flex;align-items:center;justify-content:center;">
+              <?php if (!empty($session['profile_photo']) && file_exists(__DIR__ . '/../../assets/uploads/avatars/' . $session['profile_photo'])): ?>
+                <img src="<?= BASE_URL ?>/assets/uploads/avatars/<?= htmlspecialchars($session['profile_photo']) ?>" alt="Avatar" style="width:100%;height:100%;object-fit:cover;" />
+              <?php else: ?>
+                <?= htmlspecialchars($initial) ?>
+              <?php endif; ?>
+            </div>
+            <span class="user-name"><?= htmlspecialchars($fullName) ?></span>
           </div>
         </div>
       </header>
 
       <div class="page-content">
+        <?php if (!empty($activeAnnouncements)): ?>
+        <div class="alert alert-warning mb-3" style="display:flex;flex-direction:column;gap:6px;">
+          <div style="display:flex;align-items:center;gap:8px;font-weight:700;">
+            <i class="fa-solid fa-bullhorn text-warning"></i> Clinic Notices &amp; Staff Unavailability:
+          </div>
+          <ul style="margin:0;padding-left:20px;font-size:13px;line-height:1.5;">
+            <?php foreach ($activeAnnouncements as $ann): ?>
+            <li><strong><?= htmlspecialchars($ann['title']) ?>:</strong> <?= htmlspecialchars($ann['message']) ?></li>
+            <?php endforeach; ?>
+          </ul>
+        </div>
+        <?php endif; ?>
         <div class="grid-2" style="align-items:start">
           <!-- Booking Form -->
           <div class="card">
@@ -72,6 +102,7 @@ require_once __DIR__ . '/../../includes/header.php';
                   ?>
                   <option value="<?= $doc['id'] ?>" 
                           data-schedule="<?= htmlspecialchars($doc['schedule'] ?? 'Mon-Fri') ?>" 
+                          data-specialty="<?= htmlspecialchars(strtolower($doc['specialty'] ?? '')) ?>"
                           data-days='<?= htmlspecialchars(json_encode($docDutyDays), ENT_QUOTES, 'UTF-8') ?>' 
                           <?= $doc['id'] == $prefillDoc ? 'selected' : '' ?>>
                     <?= htmlspecialchars($doc['name']) ?> – <?= htmlspecialchars($doc['specialty']) ?> (<?= htmlspecialchars($docDutyStr) ?>)
@@ -287,7 +318,94 @@ $extraScripts = <<<'JS'
 
   document.getElementById('aptDate').addEventListener('change', handleDateOrDoctorChange);
 
+  function filterDoctorsByService() {
+    const serviceEl = document.getElementById('serviceType');
+    const doctorEl  = document.getElementById('doctor');
+    if (!serviceEl || !doctorEl) return;
+
+    const selectedOption = serviceEl.options[serviceEl.selectedIndex];
+    const serviceName = selectedOption ? selectedOption.text.toLowerCase() : '';
+    const currentDocVal = doctorEl.value;
+
+    const docOptions = Array.from(doctorEl.options).slice(1);
+    if (!serviceEl.value || serviceName.includes('-- select')) {
+      docOptions.forEach(opt => {
+        opt.hidden = false;
+        opt.disabled = false;
+        opt.style.display = '';
+      });
+      return;
+    }
+
+    let keywords = [];
+    if (serviceName.includes('eye')) {
+      keywords = ['eye', 'ophthalm', 'optometr'];
+    } else if (serviceName.includes('pediatric')) {
+      keywords = ['pediatric'];
+    } else if (serviceName.includes('dental')) {
+      keywords = ['dental', 'dentist'];
+    } else if (serviceName.includes('prenatal') || serviceName.includes('maternal')) {
+      keywords = ['prenatal', 'ob-gyn', 'obstetric', 'gynecolog', 'maternal'];
+    } else if (serviceName.includes('family planning')) {
+      keywords = ['family planning', 'reproductive', 'nutrition & family planning', 'general'];
+    } else if (serviceName.includes('tb-dots')) {
+      keywords = ['tb-dots', 'pulmon', 'infectious', 'internal'];
+    } else if (serviceName.includes('nutrition')) {
+      keywords = ['nutrition', 'diet', 'family planning'];
+    } else if (serviceName.includes('immunization')) {
+      keywords = ['pediatric', 'immuniz', 'general'];
+    } else if (serviceName.includes('laboratory')) {
+      keywords = ['laboratory', 'med tech', 'patholog', 'general'];
+    } else {
+      keywords = ['general', 'internal', 'family medicine'];
+    }
+
+    let matchingOptions = [];
+    docOptions.forEach(opt => {
+      const spec = (opt.dataset.specialty || '').toLowerCase();
+      const matches = keywords.some(k => spec.includes(k));
+      if (matches) {
+        opt.hidden = false;
+        opt.disabled = false;
+        opt.style.display = '';
+        matchingOptions.push(opt);
+      } else {
+        opt.hidden = true;
+        opt.disabled = true;
+        opt.style.display = 'none';
+      }
+    });
+
+    if (matchingOptions.length === 0) {
+      docOptions.forEach(opt => {
+        const spec = (opt.dataset.specialty || '').toLowerCase();
+        if (spec.includes('general') || spec.includes('internal')) {
+          opt.hidden = false;
+          opt.disabled = false;
+          opt.style.display = '';
+          matchingOptions.push(opt);
+        }
+      });
+    }
+
+    const isCurrentStillValid = matchingOptions.some(opt => opt.value === currentDocVal);
+    if (!isCurrentStillValid) {
+      if (matchingOptions.length > 0) {
+        doctorEl.value = matchingOptions[0].value;
+      } else {
+        doctorEl.value = '';
+      }
+    }
+
+    doctorEl.dispatchEvent(new Event('change'));
+  }
+
+  document.getElementById('serviceType')?.addEventListener('change', filterDoctorsByService);
+
   document.getElementById('doctor')?.addEventListener('change', function() {
+    if (document.getElementById('serviceType')?.value) {
+      filterDoctorsByService();
+    }
     updateDoctorDutyBanner();
     handleDateOrDoctorChange();
   });
@@ -463,6 +581,9 @@ $extraScripts = <<<'JS'
 
   // Initialize doctor duty banner if prefilled
   document.addEventListener('DOMContentLoaded', () => {
+    if (document.getElementById('serviceType')?.value) {
+      filterDoctorsByService();
+    }
     updateDoctorDutyBanner();
     if (PREFILL_DATE) {
       handleDateOrDoctorChange();

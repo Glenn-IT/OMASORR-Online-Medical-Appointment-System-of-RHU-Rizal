@@ -49,7 +49,7 @@ try {
 
         $ins = $pdo->prepare("
             INSERT INTO password_resets (account_type, account_id, otp_hash, expires_at)
-            VALUES (?, ?, ?, DATE_ADD(NOW(), INTERVAL 10 MINUTE))
+            VALUES (?, ?, ?, DATE_ADD(NOW(), INTERVAL 1 MINUTE))
         ");
         $ins->execute([$accountType, $accountId, $hash]);
         $resetId = (int) $pdo->lastInsertId();

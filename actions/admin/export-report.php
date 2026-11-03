@@ -3,9 +3,10 @@ require_once __DIR__ . '/../../config/auth.php';
 require_once __DIR__ . '/../../config/database.php';
 requireLogin('admin');
 
-$fMonth   = $_GET['month']   ?? date('m');
-$fStatus  = $_GET['status']  ?? '';
-$fService = $_GET['service'] ?? '';
+$fMonth   = $_GET['month']     ?? date('m');
+$fStatus  = $_GET['status']    ?? '';
+$fService = $_GET['service']   ?? '';
+$fDoctor  = (int)($_GET['doctor_id'] ?? 0);
 
 $where  = ['1=1'];
 $params = [];
@@ -20,6 +21,10 @@ if ($fStatus) {
 if ($fService) {
     $where[] = 'a.service = :service';
     $params[':service'] = $fService;
+}
+if ($fDoctor > 0) {
+    $where[] = 'a.doctor_id = :doctor_id';
+    $params[':doctor_id'] = $fDoctor;
 }
 
 $sql = 'SELECT a.appt_no, p.full_name AS patient_name, a.service,

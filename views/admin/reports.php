@@ -7,9 +7,10 @@ $adminName = htmlspecialchars($admin['full_name'] ?? $admin['username']);
 $initial   = strtoupper(substr($adminName, 0, 1));
 
 // --- Filters from GET ---
-$fMonth   = $_GET['month']   ?? date('m');
-$fStatus  = $_GET['status']  ?? '';
-$fService = $_GET['service'] ?? '';
+$fMonth   = $_GET['month']     ?? date('m');
+$fStatus  = $_GET['status']    ?? '';
+$fService = $_GET['service']   ?? '';
+$fDoctor  = (int)($_GET['doctor_id'] ?? 0);
 
 // --- Build query ---
 $where  = ['1=1'];
@@ -25,6 +26,10 @@ if ($fStatus) {
 if ($fService) {
     $where[]            = 'a.service = :service';
     $params[':service'] = $fService;
+}
+if ($fDoctor > 0) {
+    $where[]            = 'a.doctor_id = :doctor_id';
+    $params[':doctor_id'] = $fDoctor;
 }
 $sql = 'SELECT a.appt_no, p.full_name AS patient_name, a.service,
                COALESCE(d.name,"N/A") AS doctor_name, a.date, a.time, a.status
@@ -51,8 +56,24 @@ foreach ($appts as $a) {
 arsort($serviceCounts);
 $topServices = array_slice($serviceCounts, 0, 6, true);
 
-// --- Services list for filter dropdown ---
-$services = db()->query("SELECT name FROM services ORDER BY name")->fetchAll(PDO::FETCH_COLUMN);
+// --- Services & Doctors list for filter dropdowns ---
+$services   = db()->query("SELECT name FROM services ORDER BY name")->fetchAll(PDO::FETCH_COLUMN);
+$allDoctors = db()->query("SELECT id, name, specialty FROM doctors ORDER BY name ASC")->fetchAll(PDO::FETCH_ASSOC);
+
+// --- Doctor Client Volume Breakdown ---
+$docVolumeSql = "
+    SELECT d.id, d.name, d.specialty,
+           COUNT(a.id) AS total_appts,
+           SUM(CASE WHEN a.status = 'Completed' THEN 1 ELSE 0 END) AS completed_count,
+           SUM(CASE WHEN a.status = 'Pending' THEN 1 ELSE 0 END) AS pending_count,
+           SUM(CASE WHEN a.status = 'Approved' THEN 1 ELSE 0 END) AS approved_count,
+           SUM(CASE WHEN a.status IN ('Cancelled', 'Rejected') THEN 1 ELSE 0 END) AS cancelled_count
+    FROM doctors d
+    LEFT JOIN appointments a ON a.doctor_id = d.id " . ($fMonth ? "AND MONTH(a.date) = " . (int)$fMonth : "") . "
+    GROUP BY d.id, d.name, d.specialty
+    ORDER BY total_appts DESC, d.name ASC
+";
+$doctorPerformance = db()->query($docVolumeSql)->fetchAll(PDO::FETCH_ASSOC);
 
 $CHART_SERVICE_LABELS = json_encode(array_keys($topServices),   JSON_HEX_TAG | JSON_HEX_AMP);
 $CHART_SERVICE_DATA   = json_encode(array_values($topServices), JSON_HEX_TAG | JSON_HEX_AMP);
@@ -91,7 +112,7 @@ require_once __DIR__ . '/../../includes/header.php';
         <button class="btn btn-primary btn-sm no-print" onclick="window.print()">
           <i class="fa-solid fa-print"></i> Print Report
         </button>
-        <a href="/rhu-appointment-system/actions/admin/export-report.php?month=<?= urlencode($fMonth) ?>&status=<?= urlencode($fStatus) ?>&service=<?= urlencode($fService) ?>" class="btn btn-secondary btn-sm no-print">
+        <a href="/rhu-appointment-system/actions/admin/export-report.php?month=<?= urlencode($fMonth) ?>&status=<?= urlencode($fStatus) ?>&service=<?= urlencode($fService) ?>&doctor_id=<?= urlencode((string)$fDoctor) ?>" class="btn btn-secondary btn-sm no-print">
           <i class="fa-solid fa-file-csv"></i> Export CSV
         </a>
         <div class="topbar-user">
@@ -113,7 +134,7 @@ require_once __DIR__ . '/../../includes/header.php';
 
       <!-- Stats -->
       <div class="grid-4 mb-3">
-        <div class="stat-card"><div class="stat-icon primary"><i class="fa-solid fa-calendar-check"></i></div><div class="stat-info"><div class="value"><?= $total ?></div><div class="label">Total</div></div></div>
+        <div class="stat-card"><div class="stat-icon primary"><i class="fa-solid fa-calendar-check"></i></div><div class="stat-info"><div class="value"><?= $total ?></div><div class="label">Total Appointments</div></div></div>
         <div class="stat-card"><div class="stat-icon warning"><i class="fa-solid fa-clock"></i></div><div class="stat-info"><div class="value"><?= $pending ?></div><div class="label">Pending</div></div></div>
         <div class="stat-card"><div class="stat-icon success"><i class="fa-solid fa-circle-check"></i></div><div class="stat-info"><div class="value"><?= $completed ?></div><div class="label">Completed</div></div></div>
         <div class="stat-card"><div class="stat-icon danger"><i class="fa-solid fa-ban"></i></div><div class="stat-info"><div class="value"><?= $cancelled ?></div><div class="label">Cancelled/Rejected</div></div></div>
@@ -122,10 +143,10 @@ require_once __DIR__ . '/../../includes/header.php';
       <!-- Filter Controls -->
       <div class="card mb-3 no-print">
         <div class="card-body" style="padding:16px 22px;">
-          <form method="GET" action="" class="flex-gap" id="filterForm">
+          <form method="GET" action="" class="flex-gap" id="filterForm" style="flex-wrap:wrap;align-items:flex-end;">
             <div class="form-group" style="margin-bottom:0;">
               <label class="form-label">Filter by Month</label>
-              <select class="form-select" name="month" onchange="this.form.submit()" style="width:160px;">
+              <select class="form-select" name="month" onchange="this.form.submit()" style="width:150px;">
                 <option value="">All Months</option>
                 <?php $months = ['01'=>'January','02'=>'February','03'=>'March','04'=>'April','05'=>'May','06'=>'June','07'=>'July','08'=>'August','09'=>'September','10'=>'October','11'=>'November','12'=>'December'];
                 foreach ($months as $v => $lbl): ?>
@@ -134,29 +155,82 @@ require_once __DIR__ . '/../../includes/header.php';
               </select>
             </div>
             <div class="form-group" style="margin-bottom:0;">
-              <label class="form-label">Filter by Status</label>
-              <select class="form-select" name="status" onchange="this.form.submit()" style="width:160px;">
-                <option value="">All Status</option>
-                <?php foreach (['Pending', 'Approved', 'Completed', 'Rejected', 'Cancelled'] as $s): ?>
-                <option<?= $fStatus === $s ? ' selected' : '' ?>><?= $s ?></option>
+              <label class="form-label">Filter by Doctor</label>
+              <select class="form-select" name="doctor_id" onchange="this.form.submit()" style="width:200px;">
+                <option value="0">All Doctors</option>
+                <?php foreach ($allDoctors as $doc): ?>
+                <option value="<?= $doc['id'] ?>"<?= $fDoctor === (int)$doc['id'] ? ' selected' : '' ?>>
+                  <?= htmlspecialchars($doc['name']) ?>
+                </option>
                 <?php endforeach; ?>
               </select>
             </div>
             <div class="form-group" style="margin-bottom:0;">
               <label class="form-label">Filter by Service</label>
-              <select class="form-select" name="service" onchange="this.form.submit()" style="width:200px;">
+              <select class="form-select" name="service" onchange="this.form.submit()" style="width:180px;">
                 <option value="">All Services</option>
                 <?php foreach ($services as $svc): ?>
                 <option<?= $fService === $svc ? ' selected' : '' ?>><?= htmlspecialchars($svc) ?></option>
                 <?php endforeach; ?>
               </select>
             </div>
-            <?php if (isset($_GET['month']) || $fStatus || $fService): ?>
-            <div class="form-group" style="margin-bottom:0;align-self:flex-end;">
+            <div class="form-group" style="margin-bottom:0;">
+              <label class="form-label">Filter by Status</label>
+              <select class="form-select" name="status" onchange="this.form.submit()" style="width:150px;">
+                <option value="">All Status</option>
+                <?php foreach (['Pending', 'Approved', 'Completed', 'Rejected', 'Cancelled'] as $s): ?>
+                <option<?= $fStatus === $s ? ' selected' : '' ?>><?= $s ?></option>
+                <?php endforeach; ?>
+              </select>
+            </div>
+            <?php if (isset($_GET['month']) || $fStatus || $fService || $fDoctor > 0): ?>
+            <div class="form-group" style="margin-bottom:0;">
               <a href="?" class="btn btn-secondary btn-sm">Clear Filters</a>
             </div>
             <?php endif; ?>
           </form>
+        </div>
+      </div>
+
+      <!-- Doctors and Their Total Clients Performance Table -->
+      <div class="card mb-3">
+        <div class="card-header">
+          <h5><i class="fa-solid fa-user-doctor text-primary"></i> Doctors &amp; Total Clients Volume</h5>
+          <span style="font-size:12px;color:#888;">Summary by Attending Physician</span>
+        </div>
+        <div class="table-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Doctor</th>
+                <th>Specialty</th>
+                <th style="text-align:center;">Total Clients</th>
+                <th style="text-align:center;">Completed</th>
+                <th style="text-align:center;">Approved / Pending</th>
+                <th style="text-align:center;">Cancelled / Rejected</th>
+                <th style="text-align:right;">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <?php if (empty($doctorPerformance)): ?>
+              <tr><td colspan="7"><div class="empty-state"><i class="fa-solid fa-user-doctor"></i><p>No doctor records found</p></div></td></tr>
+              <?php else: foreach ($doctorPerformance as $dp): ?>
+              <tr>
+                <td><strong><?= htmlspecialchars($dp['name']) ?></strong></td>
+                <td><span class="badge badge-info" style="font-size:12px;"><?= htmlspecialchars($dp['specialty']) ?></span></td>
+                <td style="text-align:center;font-weight:700;font-size:15px;color:var(--primary);"><?= (int)$dp['total_appts'] ?></td>
+                <td style="text-align:center;"><span class="badge badge-success"><?= (int)$dp['completed_count'] ?></span></td>
+                <td style="text-align:center;"><span class="badge badge-warning"><?= (int)$dp['approved_count'] + (int)$dp['pending_count'] ?></span></td>
+                <td style="text-align:center;"><span class="badge badge-danger"><?= (int)$dp['cancelled_count'] ?></span></td>
+                <td style="text-align:right;">
+                  <a href="?doctor_id=<?= $dp['id'] ?>&month=<?= urlencode($fMonth) ?>" class="btn btn-outline-primary btn-sm">
+                    <i class="fa-solid fa-filter"></i> View Records
+                  </a>
+                </td>
+              </tr>
+              <?php endforeach; endif; ?>
+            </tbody>
+          </table>
         </div>
       </div>
 
@@ -173,7 +247,7 @@ require_once __DIR__ . '/../../includes/header.php';
             </thead>
             <tbody>
               <?php if (empty($appts)): ?>
-              <tr><td colspan="6"><div class="empty-state"><i class="fa-solid fa-chart-line"></i><p>No data for this filter</p></div></td></tr>
+              <tr><td colspan="6"><div class="empty-state"><i class="fa-solid fa-chart-line"></i><p>No appointment records match the selected filter criteria.</p></div></td></tr>
               <?php else: foreach ($appts as $a): ?>
               <tr>
                 <td style="font-weight:600;color:var(--primary);"><?= htmlspecialchars($a['appt_no']) ?></td>

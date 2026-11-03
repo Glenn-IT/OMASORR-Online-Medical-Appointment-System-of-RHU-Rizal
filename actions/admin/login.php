@@ -19,7 +19,7 @@ if ($username === '' || $password === '') {
 try {
     $pdo  = db();
     $stmt = $pdo->prepare("
-        SELECT id, username, password AS password_hash, full_name, email, role,
+        SELECT id, username, password AS password_hash, full_name, email, role, profile_photo,
                failed_attempts, locked_until
         FROM admin_users
         WHERE BINARY username = ? AND status = 'Active'
